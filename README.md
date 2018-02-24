@@ -1,4 +1,5 @@
 ## Requires the use of [QModManager](https://www.nexusmods.com/subnautica/mods/16/) found on Nexus Mods
+## Based on [SNHardcorePlus](https://github.com/Qwiso/SNHardcorePlus), by Qwiso
 
 ### Installation
 After installing QMods, extract the contents of [DW_Tweaks.zip](https://github.com/SchmidtCapela/SubnauticaDWTweaks/releases/download/1.0.0/DW_Tweaks.zip) file to your `\QMods` folder
