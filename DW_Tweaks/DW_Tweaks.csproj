@@ -64,6 +64,7 @@
     <Compile Include="Patches\Hardcore_EnableSave.cs" />
     <Compile Include="Patches\Inventory_Size.cs" />
     <Compile Include="Patches\PickupableStrage_PickWhenFull.cs" />
+    <Compile Include="Patches\RenewablePowerPushExcess.cs" />
     <Compile Include="Patches\SeamothContainer_Size.cs" />
     <Compile Include="Patches\Seamoth_DepthMod3.cs" />
     <Compile Include="Patches\SeaTreaderRandomChunks.cs" />

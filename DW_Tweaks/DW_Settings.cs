@@ -35,6 +35,7 @@ namespace DW_Tweaks
         public bool DrillableAlwaysDrop = false;                 // Always drop resources every time a large deposit breaks
         public bool DrillableDropMax = false;                    // Whenever large deposits break, drops the max amount of resources
         public bool SeaTreaderRandomChunks = false;              // Randomize the content of chunks unearthed by the Sea Treaders
+        public bool RenewablePowerPushExcess = false;            // Push excess power into the base's infrastructure
 
         public int Vector3StringPrecision = 1;                   // How many decimal places to show when printing Vector3 values, as seen in the F1 screen
 

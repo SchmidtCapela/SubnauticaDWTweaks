@@ -32,6 +32,7 @@ FragmentTrackAll | false | Also track fragments you have already scanned.
 DrillableAlwaysDrop | false | Always drop resources every time a large deposit breaks.
 DrillableDropMax | false | Whenever large deposits break, drops the max amount of resources.
 SeaTreaderRandomChunks | false | Randomize the content of chunks unearthed by the Sea Treaders.
+RenewablePowerPushExcess | false | Push excess power from solar and thermal into the base's power relay.
 Vector3StringPrecision | 1 | How many decimal places to show when printing Vector3 values, as seen in the F1 screen.
 
 
@@ -59,6 +60,7 @@ Vector3StringPrecision | 1 | How many decimal places to show when printing Vecto
 	"DrillableAlwaysDrop": false,
 	"DrillableDropMax": false,
 	"SeaTreaderRandomChunks": false,
+	"RenewablePowerPushExcess": false,
 	"Vector3StringPrecision": 1
 }
 ```

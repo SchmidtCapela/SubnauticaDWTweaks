@@ -50,6 +50,12 @@ namespace DW_Tweaks.Patches
         public static readonly object funcCheckCorridorConnection = AccessTools.Method(typeof(BaseAddCorridorGhost), "CheckCorridorConnection");
         public static readonly object funcKeyCode = AccessTools.Method(typeof(Input), "GetKey", new Type[] { typeof(KeyCode) });
 
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.BypassBuildRestrictions;
+        }
+
         public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
         {
             bool injected = false;
@@ -74,6 +80,12 @@ namespace DW_Tweaks.Patches
     [HarmonyPatch("CheckFlags")]
     class Constructable_CheckFlags_Patch
     {
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.BypassBuildRestrictions;
+        }
+
         public static bool Prefix(ref bool __result)
         {
             if (Input.GetKey(KeyCode.LeftControl))
@@ -82,6 +94,50 @@ namespace DW_Tweaks.Patches
                 return false;
             }
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Builder))]
+    [HarmonyPatch("ValidateOutdoor")]
+    class Builder_ValidateOutdoor_Patch
+    {
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.BypassBuildRestrictions;
+        }
+
+        public static bool Prefix(ref bool __result)
+        {
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                __result = true;
+                return false;
+            }
+            return true;
+        }
+    }
+
+    // Tweak to the thermal generator to make it react to temperature decreases, needed to make it less cheaty.
+    [HarmonyPatch(typeof(ThermalPlant))]
+    [HarmonyPatch("QueryTemperature")]
+    class ThermalPlant_QueryTemperature_Patch
+    {
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.BypassBuildRestrictions;
+        }
+
+        public static bool Prefix(ThermalPlant __instance)
+        {
+            WaterTemperatureSimulation main = WaterTemperatureSimulation.main;
+            if (main)
+            {
+                __instance.temperature = main.GetTemperature(__instance.transform.position);
+                __instance.UpdateUI();
+            }
+            return false;
         }
     }
 }
