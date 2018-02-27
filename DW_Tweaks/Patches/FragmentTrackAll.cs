@@ -55,4 +55,22 @@ namespace DW_Tweaks.Patches
             return codes.AsEnumerable();
         }
     }
+
+    // This function only serves to remove fragments from tracking as the player completes recipes.
+    [HarmonyPatch(typeof(ResourceTracker))]
+    [HarmonyPatch("UpdateFragments")]
+    class ResourceTracker_UpdateFragments_patch
+    {
+
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.FragmentTrackAll;
+        }
+
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
 }

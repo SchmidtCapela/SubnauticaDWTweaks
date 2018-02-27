@@ -19,9 +19,15 @@ namespace DW_Tweaks
 
         public int ExosuitStorageWidth = 6;                      // Width of the PRAM storage, must be no more than 8
 
+        public int ContainerOverstuff = 1;                       // Containers with only one kind of 1x1 item get their capacity multiplied by this
+
         public float FireExtinguisherRegen = 0f;                 // Amount of fuel the fire extinguisher regens per second when held
 
         public float SeamothDepthMod3 = 700f;                    // Extra depth that the MK3 mod allows for the Seamoth, added to its natural 200m max depth
+        public float SeamothHandlingFix = 0f;                    // Fixes the seamoth handling and multiplies the speed by this value; 0 disables, 1.5766 is the old exploit speed
+
+        public float CyclopsSpeedMult = 1f;                      // Myltiplies the Cyclops' speed by this value
+        public float CyclopsTurningMult = 1f;                    // Myltiplies the Cyclops' turning by this value
 
         public bool VehicleHUDExtraPrecision = false;            // Adds a decimal to Energy and Temperature views, and holding LeftControl and LeftShift provide alternative readouts
         public bool BypassBuildRestrictions = false;             // Holding LeftControl while building ignores certain restrictions

@@ -54,6 +54,8 @@
   <ItemGroup>
     <Compile Include="Patches\BioReactor_Size.cs" />
     <Compile Include="DW_Settings.cs" />
+    <Compile Include="Patches\Container_Overstuff.cs" />
+    <Compile Include="Patches\CyclopsHandling.cs" />
     <Compile Include="Patches\Container_ItemCount.cs" />
     <Compile Include="Patches\DevConsole.cs" />
     <Compile Include="Patches\Drillable_MaxItems.cs" />
@@ -66,6 +68,7 @@
     <Compile Include="Patches\PickupableStrage_PickWhenFull.cs" />
     <Compile Include="Patches\RenewablePowerPushExcess.cs" />
     <Compile Include="Patches\SeamothContainer_Size.cs" />
+    <Compile Include="Patches\SeamothHandlingFix.cs" />
     <Compile Include="Patches\Seamoth_DepthMod3.cs" />
     <Compile Include="Patches\SeaTreaderRandomChunks.cs" />
     <Compile Include="Patches\Steam_UnlockItems.cs" />
