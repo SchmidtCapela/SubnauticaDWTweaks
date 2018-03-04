@@ -12,19 +12,33 @@ namespace DW_Tweaks.Patches
     [HarmonyPatch("SpawnChunks")]
     class SeaTreaderSounds_SpawnChunks_patch
     {
-        public static List<BreakableResource.RandomPrefab> prefabs = new List<BreakableResource.RandomPrefab> {
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Diamond), chance = (float)0.0500},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.AluminumOxide), chance = (float)0.0526 },
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Lead), chance = (float)0.0556},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Lithium), chance = (float)0.0588},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Copper), chance = (float)0.1250},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Silver), chance = (float)0.1429},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Gold), chance = (float)0.16667},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Magnetite), chance = (float)0.2},
-                  new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(TechType.Titanium), chance = (float)0.5},
-                };
-        public static GameObject defPrefab = CraftData.GetPrefabForTechType(TechType.Quartz);
-        public static bool entropyListPatched = false;
+        public static List<BreakableResource.RandomPrefab> prefabs = null;
+        public static GameObject defPrefab = null;
+        public static bool spawnDataInitialized = false;
+
+        private struct TechChance
+        {
+            public TechType tech;
+            public float chance;
+            public TechChance(TechType t, float c)
+            {
+                tech = t;
+                chance = c;
+            }
+        }
+        private static TechChance[] techList =
+        {
+            new TechChance(TechType.Diamond, 1f),
+            new TechChance(TechType.AluminumOxide, 1f),
+            new TechChance(TechType.Lead, 1f),
+            new TechChance(TechType.Lithium, 1f),
+            new TechChance(TechType.Copper, 2f),
+            new TechChance(TechType.Silver, 2f),
+            new TechChance(TechType.Gold, 2f),
+            new TechChance(TechType.Magnetite, 2f),
+            new TechChance(TechType.Titanium, 4f),
+            new TechChance(TechType.Quartz, 4f),
+        };
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -34,29 +48,39 @@ namespace DW_Tweaks.Patches
 
         public static void Prefix(SeaTreaderSounds __instance, ref List<BreakableResource.RandomPrefab> __state)
         {
-            if (!entropyListPatched)  // Needs to add the extra materials to the entropy lists, otherwise they can't come from chunks
+            if (!spawnDataInitialized)  // Needs to add the extra materials to the entropy lists, otherwise they can't come from chunks
             {
-                TechType[] techList = { TechType.Diamond, TechType.AluminumOxide, TechType.Lead, TechType.Lithium, TechType.Copper, TechType.Silver, TechType.Gold, TechType.Magnetite, TechType.Titanium, TechType.Quartz };
                 PlayerEntropy component = Player.main.gameObject.GetComponent<PlayerEntropy>();
                 if (component != null)
                 {
-                    entropyListPatched = true;
+                    spawnDataInitialized = true;
+                    float totalChance = techList.Sum(x => x.chance);
+                    // Load the prefabs later to avoid conflicts with other mods
+                    defPrefab = CraftData.GetPrefabForTechType(techList.Last().tech);
+                    prefabs = new List<BreakableResource.RandomPrefab>();
                     for (int i = 0; i < techList.Length; i++)
                     {
+                        // Adds the prefab and calculated chance to the list
+                        if (i < techList.Length - 1)
+                        {
+                            prefabs.Add(new BreakableResource.RandomPrefab() { prefab = CraftData.GetPrefabForTechType(techList[i].tech), chance = techList[i].chance / totalChance });
+                            totalChance -= techList[i].chance;
+                        }
+                        // Add the TechType to the entropy lists
                         bool exists = false;
                         for (int j = 0; j < component.randomizers.Count; j++)
                         {
-                            if (component.randomizers[j].techType == techList[i])
+                            if (component.randomizers[j].techType == techList[i].tech)
                             {
                                 exists = true;
                             }
                         }
-                        if (!exists) component.randomizers.Add(new PlayerEntropy.TechEntropy() { techType = techList[i], entropy = new FairRandomizer() { entropy = 0 } });
+                        if (!exists) component.randomizers.Add(new PlayerEntropy.TechEntropy() { techType = techList[i].tech, entropy = new FairRandomizer() { entropy = 0 } });
                     }
 
                 }
             }
-            if (__instance.stepChunkPrefab != null)  // Can change the 
+            if (__instance.stepChunkPrefab != null)  // Change the spawn list for the seatreader's chunk
             {
                 var breakableResource = __instance.stepChunkPrefab.GetComponent<BreakableResource>();
                 __state = breakableResource.prefabList;

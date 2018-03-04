@@ -28,7 +28,7 @@ namespace DW_Tweaks.Patches
             for (int i = 3; i < codes.Count - 2; i++)
             {
                 if (!injected && codes[i].opcode.Equals(OpCodes.Ldfld) && codes[i].operand.Equals(cellTypeField) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldc_I4_2) && codes[i + 2].opcode.Equals(OpCodes.Bne_Un) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Ldc_I4_2) && codes[i + 2].opcode.Equals(OpCodes.Bne_Un) &&  // The test to see if the part is a foundation
                     codes[i - 3].opcode.Equals(OpCodes.Ldloc_0) && codes[i - 2].opcode.Equals(OpCodes.Brfalse))
                 {
                     injected = true;
@@ -115,6 +115,37 @@ namespace DW_Tweaks.Patches
                 return false;
             }
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Builder))]
+    [HarmonyPatch("TryPlace")]
+    class Builder_TryPlace_Patch
+    {
+        public static readonly object fieldAllowedOutside = AccessTools.Field(typeof(Builder), "allowedOutside");
+
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.BypassBuildRestrictions;
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
+        {
+            bool injected = false;
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count - 1; i++)
+            {
+                if (!injected && codes[i].opcode.Equals(OpCodes.Ldsfld) && codes[i].operand.Equals(fieldAllowedOutside) && codes[i + 1].opcode.Equals(OpCodes.Brfalse))
+                {
+                    // The test is redundant anyway, so remove it.
+                    injected = true;
+                    codes.RemoveRange(i, 2);
+                    break;
+                }
+            }
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply Builder_TryPlace_Patch.");
+            return codes.AsEnumerable();
         }
     }
 

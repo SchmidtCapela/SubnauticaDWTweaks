@@ -80,6 +80,11 @@ namespace DW_Tweaks
                 Console.WriteLine("DW_Tweaks ERR: Parameter ExosuitStorageWidth out of bounds. Should be between 4 and 8.");
                 DW_Tweaks_Settings.Instance.ExosuitStorageWidth = 6;
             }
+            if (DW_Tweaks_Settings.Instance.ContainerOverstuff < 1)
+            {
+                Console.WriteLine("DW_Tweaks ERR: Parameter ContainerOverstuff out of bounds. Should be 1 or more.");
+                DW_Tweaks_Settings.Instance.ContainerOverstuff = 1;
+            }
         }
 
         private static void writeDefaultSettingsFile(string path)

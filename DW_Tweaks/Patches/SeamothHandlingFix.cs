@@ -12,11 +12,6 @@ namespace DW_Tweaks.Patches
     [HarmonyPatch("ApplyPhysicsMove")]
     class Vehicle_ApplyPhysicsMove_patch
     {
-        /**public static readonly MethodInfo funcPlaySplashSound = AccessTools.Method(typeof(Vehicle), "PlaySplashSound");
-        public static readonly Type typeVehicleAccelerationModifier = AccessTools.Inner(typeof(Vehicle), "VehicleAccelerationModifier");
-        public static readonly FieldInfo fieldWasAboveWater = AccessTools.Field(typeof(Vehicle), "wasAboveWater");
-        public static readonly FieldInfo fieldAccelerationModifiers = AccessTools.Field(typeof(Vehicle), "accelerationModifiers");**/
-
         public static readonly FieldInfo fieldX = AccessTools.Field(typeof(Vector3), "x");
         public static readonly FieldInfo fieldY = AccessTools.Field(typeof(Vector3), "y");
         public static readonly FieldInfo fieldZ = AccessTools.Field(typeof(Vector3), "z");
@@ -136,6 +131,7 @@ namespace DW_Tweaks.Patches
         }
     }
 
+    // Small fix to make diagonals not consume more energy anymore
     [HarmonyPatch(typeof(SeaMoth))]
     [HarmonyPatch("Update")]
     class SeaMoth_Update_patch
