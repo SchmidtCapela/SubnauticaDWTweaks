@@ -13,11 +13,9 @@ namespace DW_Tweaks.Patches
     class FireExtinguisher_Update_patch
     {
         public static readonly object fieldFuel = AccessTools.Field(typeof(FireExtinguisher), "fuel");
+        public static readonly object fieldUsedThisFrame = AccessTools.Field(typeof(FireExtinguisher), "usedThisFrame");
         public static readonly object methodGetDeltaTime = AccessTools.Method(typeof(Time), "get_deltaTime");
         public static readonly object methodMinFloat = AccessTools.Method(typeof(Mathf), "Min", new Type[] { typeof(float), typeof(float) });
-        public static readonly object fieldSoundEmitter = AccessTools.Field(typeof(FireExtinguisher), "soundEmitter");
-        public static readonly object methodSoundEmitterPlay = AccessTools.Method(typeof(FMOD_CustomEmitter), "Play");
-        public static readonly object methodSoundEmitterStop = AccessTools.Method(typeof(FMOD_CustomEmitter), "Stop");
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -33,13 +31,10 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 6; i++)
             {
                 if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldfld) && codes[i].operand.Equals(fieldSoundEmitter) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Callvirt) && codes[i + 1].operand.Equals(methodSoundEmitterPlay) &&
-                    codes[i + 2].opcode.Equals(OpCodes.Br) &&
                     codes[i + 3].opcode.Equals(OpCodes.Ldarg_0) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Ldfld) && codes[i + 4].operand.Equals(fieldSoundEmitter) &&
-                    codes[i + 5].opcode.Equals(OpCodes.Callvirt) && codes[i + 5].operand.Equals(methodSoundEmitterStop) &&
-                    codes[i + 6].opcode.Equals(OpCodes.Ldarg_0))
+                    codes[i + 4].opcode.Equals(OpCodes.Ldc_I4_0) &&
+                    codes[i + 5].opcode.Equals(OpCodes.Stfld) && codes[i + 5].operand.Equals(fieldUsedThisFrame) &&
+                    codes[i + 6].opcode.Equals(OpCodes.Ldsfld))
                 {
                     injected = true;
                     codes.InsertRange(i + 6, new List<CodeInstruction>() {

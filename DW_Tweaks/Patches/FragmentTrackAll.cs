@@ -42,10 +42,9 @@ namespace DW_Tweaks.Patches
                 {
                     injected = true;
                     List<CodeInstruction> replacement = new List<CodeInstruction>() {
-                        new CodeInstruction(OpCodes.Ldc_I4_0),
+                        new CodeInstruction(OpCodes.Ldc_I4_0) {labels = codes[i].labels },
                         new CodeInstruction(OpCodes.Stloc_0),
                     };
-                    replacement[0].labels = codes[i].labels;
                     codes.RemoveRange(i, 12);
                     codes.InsertRange(i, replacement);
                     break;

@@ -22,10 +22,10 @@ namespace DW_Tweaks.Patches
         public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
         {
             var codes = new List<CodeInstruction>(instructions);
-            int loc1 = -1;
+            bool injected = false;
             for (int i = 0; i < codes.Count - 1; i++)
             {
-                if ((loc1 < 0) &&
+                if (!injected &&
                     codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldarg_1) &&
@@ -33,16 +33,13 @@ namespace DW_Tweaks.Patches
                     codes[i + 4].opcode.Equals(OpCodes.Br)
                     )
                 {
-                    loc1 = i;
+                    injected = true;
+                    codes.RemoveRange(0, i);
+                    codes.RemoveRange(4, codes.Count - 5);
                     break;
                 }
             }
-            if (loc1 >= 0)
-            {
-                codes.RemoveRange(0, loc1);
-                codes.RemoveRange(4, codes.Count - 5);
-            }
-            else Console.WriteLine("DW_Tweaks ERR: Failed to apply PickupableStorage_OnHandHover_patch.");
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply PickupableStorage_OnHandHover_patch.");
             return codes.AsEnumerable();
         }
     }
@@ -56,10 +53,10 @@ namespace DW_Tweaks.Patches
         public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
         {
             var codes = new List<CodeInstruction>(instructions);
-            int loc1 = -1;
+            bool injected = false;
             for (int i = 0; i < codes.Count - 1; i++)
             {
-                if ((loc1 < 0) &&
+                if (!injected &&
                     codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldarg_1) &&
@@ -67,15 +64,12 @@ namespace DW_Tweaks.Patches
                     codes[i + 4].opcode.Equals(OpCodes.Br)
                     )
                 {
-                    loc1 = i;
+                    injected = true;
+                    codes.RemoveRange(0, i);
+                    codes.RemoveRange(4, codes.Count - 5);
                 }
             }
-            if (loc1 >= 0)
-            {
-                codes.RemoveRange(0, loc1);
-                codes.RemoveRange(4, codes.Count - 5);
-            }
-            else Console.WriteLine("DW_Tweaks ERR: Failed to apply PickupableStorage_OnHandClick_patch.");
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply PickupableStorage_OnHandClick_patch.");
             return codes.AsEnumerable();
         }
     }

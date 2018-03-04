@@ -24,14 +24,12 @@ namespace DW_Tweaks.Patches
 
         public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
         {
-            bool injectedSpeed = false;
-            bool injectedTurning = false;
-            var labelGoingForward = generator.DefineLabel();
-            var labelForwardBackwardEnd = generator.DefineLabel();
+            bool injectedSpeed = (DW_Tweaks_Settings.Instance.CyclopsSpeedMult == 1);
+            bool injectedTurning = (DW_Tweaks_Settings.Instance.CyclopsTurningMult == 1);
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count; i++)
             {
-                if (!injectedSpeed &&  // The whole math expression goes here
+                if (!injectedSpeed &&
                     codes[i].opcode.Equals(OpCodes.Ldfld) && codes[i].operand.Equals(funcBaseForwardAccel))
                 {
                     injectedSpeed = true;
@@ -39,9 +37,8 @@ namespace DW_Tweaks.Patches
                         new CodeInstruction(OpCodes.Ldc_R4, DW_Tweaks_Settings.Instance.CyclopsSpeedMult),
                         new CodeInstruction(OpCodes.Mul),
                     });
-                    if (injectedSpeed && injectedTurning) break;
                 }
-                if (!injectedTurning &&  // The whole math expression goes here
+                if (!injectedTurning &&
                     codes[i].opcode.Equals(OpCodes.Ldfld) && codes[i].operand.Equals(fieldBaseTurningTorque))
                 {
                     injectedTurning = true;
@@ -49,8 +46,8 @@ namespace DW_Tweaks.Patches
                         new CodeInstruction(OpCodes.Ldc_R4, DW_Tweaks_Settings.Instance.CyclopsTurningMult),
                         new CodeInstruction(OpCodes.Mul),
                     });
-                    if (injectedSpeed && injectedTurning) break;
                 }
+                if (injectedSpeed && injectedTurning) break;
             }
             if (!(injectedSpeed && injectedTurning)) Console.WriteLine("DW_Tweaks ERR: Failed to apply SubControl_FixedUpdate_patch.");
             return codes.AsEnumerable();

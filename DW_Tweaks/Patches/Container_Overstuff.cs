@@ -47,13 +47,13 @@ namespace DW_Tweaks.Patches
             return (DW_Tweaks_Settings.Instance.ContainerOverstuff > 1);
         }
 
-        public static bool testContainer(ItemsContainer __instance)
+        public static bool testContainer(ItemsContainer container)
         {
-            List<TechType> techTypes = __instance.GetItemTypes();
+            List<TechType> techTypes = container.GetItemTypes();
             if (techTypes.Count() == 1)
             {
                 Vector2int itemSize = CraftData.GetItemSize(techTypes[0]);
-                if (itemSize.x == 1 && itemSize.y == 1 && __instance.count <= (__instance.sizeX * __instance.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff))
+                if (itemSize.x == 1 && itemSize.y == 1 && container.count <= (container.sizeX * container.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff))
                 {
                     return true;
                 }
@@ -88,28 +88,5 @@ namespace DW_Tweaks.Patches
             if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply ItemsContainer_Sort_patch.");
             return codes.AsEnumerable();
         }
-
-        /**public static bool Prefix(ItemsContainer __instance)
-        {
-            if (__instance.unsorted)
-            {
-                List<ItemsContainer.ItemGroup> gr = new List<ItemsContainer.ItemGroup>(__instance._items.Values);
-                if (!__instance.TrySort(gr, __instance.itemsMap, true))
-                {
-                    List<TechType> techTypes = __instance.GetItemTypes();
-                    if (techTypes.Count() == 1)
-                    {
-                        Vector2int itemSize = CraftData.GetItemSize(techTypes[0]);
-                        if (!(itemSize.x == 1 && itemSize.y == 1 && __instance.count <= (__instance.sizeX * __instance.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff)))
-                        {
-                            ErrorMessage.AddError(Language.main.Get("ContainerOverflow"));
-                        }
-                    }
-                    else ErrorMessage.AddError(Language.main.Get("ContainerOverflow"));
-                }
-                __instance.unsorted = false;
-            }
-            return false;
-        }**/
     }
 }

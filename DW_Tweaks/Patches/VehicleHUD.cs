@@ -8,12 +8,12 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
+    // Cyclops
     [HarmonyPatch(typeof(CyclopsHelmHUDManager))]
     [HarmonyPatch("Update")]
     class CyclopsHelmHUDManager_Update_patch
     {
         public static readonly object funcCeilToInt = AccessTools.Method(typeof(Mathf), "CeilToInt");
-        public static readonly object fieldPowerText = AccessTools.Field(typeof(CyclopsHelmHUDManager), "powerText");
         public static readonly object fieldSubRoot = AccessTools.Field(typeof(CyclopsHelmHUDManager), "subRoot");
         public static readonly object funcGetTemperature = AccessTools.Method(typeof(SubRoot), "GetTemperature");
         public static readonly object fieldThermalReactorCharge = AccessTools.Field(typeof(SubRoot), "thermalReactorCharge");
@@ -41,13 +41,11 @@ namespace DW_Tweaks.Patches
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count - 4; i++)
             {
-                //Console.WriteLine("DW_Tweaks Debug: {0:0000} {1}: ({2}){3}", i, codes[i].opcode, codes[i].opcode.OperandType, codes[i].operand);
                 if ((CodeLoc1 < 0) &&
                     codes[i].opcode.Equals(OpCodes.Ldloc_3) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldc_R4) && codes[i + 1].operand.Equals((float)100) &&
                     codes[i + 2].opcode.Equals(OpCodes.Mul) &&
                     codes[i + 3].opcode.Equals(OpCodes.Call) && codes[i + 3].operand.Equals(funcCeilToInt) &&
-                    //codes[i + 4].opcode.Equals(OpCodes.Stloc_S) && codes[i + 4].operand.Equals(localCurrEnergy))
                     codes[i + 4].opcode.Equals(OpCodes.Stloc_S))
                 {
                     CodeLoc1 = i;
@@ -64,65 +62,66 @@ namespace DW_Tweaks.Patches
             if ((CodeLoc1 >= 0) && (CodeLoc2 >= 0))
             {
                 // Change the format string first, otherwise the other location is invalidated
-                codes.Insert(CodeLoc2, new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl));
-                codes.Insert(CodeLoc2 + 1, new CodeInstruction(OpCodes.Call, funcKeyCode));
-                codes.Insert(CodeLoc2 + 2, new CodeInstruction(OpCodes.Brtrue, formatCtrl)); // Need to assign the label when adding the target instruction
-                // Change the default string; the instruction is already OpCodes.Ldstr
-                codes[CodeLoc2 + 3].operand = "{0:0\\.0}%";
-                codes.Insert(CodeLoc2 + 4, new CodeInstruction(OpCodes.Br, formatEnd)); // Label assigned at the end
-                codes.Insert(CodeLoc2 + 5, new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftShift));
-                codes[CodeLoc2 + 5].labels.Add(formatCtrl);
-                codes.Insert(CodeLoc2 + 6, new CodeInstruction(OpCodes.Call, funcKeyCode));
-                codes.Insert(CodeLoc2 + 7, new CodeInstruction(OpCodes.Brtrue, formatCtrlShift)); // Need to assign the label when adding the target instruction
-                codes.Insert(CodeLoc2 + 8, new CodeInstruction(OpCodes.Ldstr, "{0:0\\.0}C"));
-                codes.Insert(CodeLoc2 + 9, new CodeInstruction(OpCodes.Br, formatEnd)); // Label assigned at the end
-                codes.Insert(CodeLoc2 + 10, new CodeInstruction(OpCodes.Ldstr, "{0:0\\.000}"));
-                codes[CodeLoc2 + 10].labels.Add(formatCtrlShift);
-                // Label for the instruction after assigning the format string
-                codes[CodeLoc2 + 11].labels.Add(formatEnd);
+                codes.RemoveAt(CodeLoc2);
+                // Label for the first instruction after assigning the format string
+                codes[CodeLoc2].labels.Add(formatEnd);
+                codes.InsertRange(CodeLoc2, new List<CodeInstruction>() {
+                    new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl),
+                    new CodeInstruction(OpCodes.Call, funcKeyCode),
+                    new CodeInstruction(OpCodes.Brtrue, formatCtrl),
+                    new CodeInstruction(OpCodes.Ldstr, "{0:0\\.0}%"), // changed default string
+                    new CodeInstruction(OpCodes.Br, formatEnd),
+                    new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftShift) { labels = new List<Label>() { formatCtrl } },
+                    new CodeInstruction(OpCodes.Call, funcKeyCode),
+                    new CodeInstruction(OpCodes.Brtrue, formatCtrlShift),
+                    new CodeInstruction(OpCodes.Ldstr, "{0:0\\.0}C"),  // temperature when LeftControl pressed
+                    new CodeInstruction(OpCodes.Br, formatEnd),
+                    new CodeInstruction(OpCodes.Ldstr, "{0:0\\.000}") { labels = new List<Label>() { formatCtrlShift } },  // Power regen when LeftControl+LeftShift pressed
+                });
 
                 // Now to change the displayed value
-                codes.Insert(CodeLoc1, new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl));
-                codes.Insert(CodeLoc1 + 1, new CodeInstruction(OpCodes.Call, funcKeyCode));
-                codes.Insert(CodeLoc1 + 2, new CodeInstruction(OpCodes.Brtrue, valueCtrl)); // Need to assign the label when adding the target instruction
-                // The next three instructions are kept, though the multiplier is changed
-                codes[CodeLoc1 + 4].operand = (float)1000;
-                codes.Insert(CodeLoc1 + 6, new CodeInstruction(OpCodes.Br, valueEnd)); // Label assigned at the end
-                // The other value possibilities
-                codes.Insert(CodeLoc1 + 7, new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftShift));
-                codes[CodeLoc1 + 7].labels.Add(valueCtrl);
-                codes.Insert(CodeLoc1 + 8, new CodeInstruction(OpCodes.Call, funcKeyCode));
-                codes.Insert(CodeLoc1 + 9, new CodeInstruction(OpCodes.Brtrue, valueCtrlShift)); // Need to assign the label when adding the target instruction
-                codes.Insert(CodeLoc1 + 10, new CodeInstruction(OpCodes.Ldarg_0));
-                codes.Insert(CodeLoc1 + 11, new CodeInstruction(OpCodes.Ldfld, fieldSubRoot));
-                codes.Insert(CodeLoc1 + 12, new CodeInstruction(OpCodes.Call, funcGetTemperature));
-                codes.Insert(CodeLoc1 + 13, new CodeInstruction(OpCodes.Ldc_R4, (float)10));
-                codes.Insert(CodeLoc1 + 14, new CodeInstruction(OpCodes.Mul));
-                codes.Insert(CodeLoc1 + 15, new CodeInstruction(OpCodes.Br, valueEnd)); // Label assigned at the end
-                codes.Insert(CodeLoc1 + 16, new CodeInstruction(OpCodes.Ldarg_0));
-                codes[CodeLoc1 + 16].labels.Add(valueCtrlShift);
-                codes.Insert(CodeLoc1 + 17, new CodeInstruction(OpCodes.Ldfld, fieldSubRoot));
-                codes.Insert(CodeLoc1 + 18, new CodeInstruction(OpCodes.Ldfld, fieldThermalReactorCharge));
-                codes.Insert(CodeLoc1 + 19, new CodeInstruction(OpCodes.Ldarg_0));
-                codes.Insert(CodeLoc1 + 20, new CodeInstruction(OpCodes.Ldfld, fieldSubRoot));
-                codes.Insert(CodeLoc1 + 21, new CodeInstruction(OpCodes.Call, funcGetTemperature));
-                codes.Insert(CodeLoc1 + 22, new CodeInstruction(OpCodes.Callvirt, funcAnimationCurveEvaluate));
-                codes.Insert(CodeLoc1 + 23, new CodeInstruction(OpCodes.Ldc_R4, (float)1.5));
-                codes.Insert(CodeLoc1 + 24, new CodeInstruction(OpCodes.Mul));
-                codes.Insert(CodeLoc1 + 25, new CodeInstruction(OpCodes.Ldc_R4, (float)1000));
-                codes.Insert(CodeLoc1 + 26, new CodeInstruction(OpCodes.Mul));
-                // Label for the instruction that calls the CeilToInt function
-                codes[CodeLoc1 + 27].labels.Add(valueEnd);
+                codes.RemoveRange(CodeLoc1, 3);
+                // Label for the first instruction that calls the CeilToInt function
+                codes[CodeLoc1].labels.Add(valueEnd);
+                codes.InsertRange(CodeLoc1, new List<CodeInstruction>() {
+                    new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl),
+                    new CodeInstruction(OpCodes.Call, funcKeyCode),
+                    new CodeInstruction(OpCodes.Brtrue, valueCtrl),
+                    // Default: power value, though multiplied by 1000
+                    new CodeInstruction(OpCodes.Ldloc_3),
+                    new CodeInstruction(OpCodes.Ldc_R4, 1000f),
+                    new CodeInstruction(OpCodes.Mul),
+                    new CodeInstruction(OpCodes.Br, valueEnd),
+                    new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftShift) { labels = new List<Label>() { valueCtrl } },
+                    new CodeInstruction(OpCodes.Call, funcKeyCode),
+                    new CodeInstruction(OpCodes.Brtrue, valueCtrlShift),
+                    // LeftControl: Temperature
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, fieldSubRoot),
+                    new CodeInstruction(OpCodes.Call, funcGetTemperature),
+                    new CodeInstruction(OpCodes.Ldc_R4, (float)10),
+                    new CodeInstruction(OpCodes.Mul),
+                    new CodeInstruction(OpCodes.Br, valueEnd),
+                    // LeftControl+LeftShift: Power Regen
+                    new CodeInstruction(OpCodes.Ldarg_0) { labels = new List<Label>() { valueCtrlShift } },
+                    new CodeInstruction(OpCodes.Ldfld, fieldSubRoot),
+                    new CodeInstruction(OpCodes.Ldfld, fieldThermalReactorCharge),
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, fieldSubRoot),
+                    new CodeInstruction(OpCodes.Call, funcGetTemperature),
+                    new CodeInstruction(OpCodes.Callvirt, funcAnimationCurveEvaluate),
+                    new CodeInstruction(OpCodes.Ldc_R4, (float)1.5),
+                    new CodeInstruction(OpCodes.Mul),
+                    new CodeInstruction(OpCodes.Ldc_R4, (float)1000),
+                    new CodeInstruction(OpCodes.Mul),
+                });
             }
             else Console.WriteLine("DW_Tweaks ERR: Failed to apply CyclopsHelmHUDManager_Update_patch.");
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-            //    Console.WriteLine("DW_Tweaks Debug: {0:0000} {1}: ({2}){3}", i, codes[i].opcode, codes[i].opcode.OperandType, codes[i].operand);
-            //}
             return codes.AsEnumerable();
         }
     }
     
+    // PRAWN
     [HarmonyPatch(typeof(uGUI_ExosuitHUD))]
     [HarmonyPatch("Update")]
     class uGUI_ExosuitHUD_Update_patch
@@ -162,7 +161,6 @@ namespace DW_Tweaks.Patches
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count - 2; i++)
             {
-                // Console.WriteLine("DW_Tweaks Debug: {0:0000} {1}: ({2}){3}", i, codes[i].opcode, codes[i].opcode.OperandType, codes[i].operand);
                 // Find where it's storing the energy value
                 if ((localCurrEnergy == null) &&
                     codes[i].opcode.Equals(OpCodes.Callvirt) && codes[i].operand.Equals(funcGetHUDValues) &&
@@ -255,41 +253,33 @@ namespace DW_Tweaks.Patches
                     new CodeInstruction(OpCodes.Brtrue, formatCtrl), // Need to assign the label when adding the target instruction
                     new CodeInstruction(OpCodes.Ldstr, "{0:0\\.0}"),
                     new CodeInstruction(OpCodes.Br, formatEnd),
-                    new CodeInstruction(OpCodes.Ldstr, "{0:0\\.000}"),
-                    new CodeInstruction(OpCodes.Ldloc_S, localCurrEnergyInt),
+                    new CodeInstruction(OpCodes.Ldstr, "{0:0\\.000}") {labels = new List<Label>() { formatCtrl } },
+                    new CodeInstruction(OpCodes.Ldloc_S, localCurrEnergyInt) {labels = new List<Label>() { formatEnd } },
                     new CodeInstruction(OpCodes.Box, typeof(Int32)),
                     new CodeInstruction(OpCodes.Call, funcStringFormat1),
                 });
-                codes[CodeLoc2 + 5].labels.Add(formatCtrl);
-                codes[CodeLoc2 + 6].labels.Add(formatEnd);
 
                 List<Label> tempJump = codes[CodeLoc1].labels;  // There is a jump to this instruction
                 codes.RemoveRange(CodeLoc1, 2);
                 codes.InsertRange(CodeLoc1, new List<CodeInstruction>() {
-                    new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl),
+                    new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl) {labels = tempJump },  // Restaure the missing jump target to prevent an unnamed exception
                     new CodeInstruction(OpCodes.Call, funcKeyCode),
                     new CodeInstruction(OpCodes.Brtrue, valueCtrl), // Need to assign the label when adding the target instruction
                     new CodeInstruction(OpCodes.Ldloc_S, localCurrEnergy),
                     new CodeInstruction(OpCodes.Br, valueEnd),
-                    new CodeInstruction(OpCodes.Ldloc_0),
+                    new CodeInstruction(OpCodes.Ldloc_0) {labels = new List<Label>() { valueCtrl } },
                     new CodeInstruction(OpCodes.Ldfld, fieldThermalReactorCharge),
                     new CodeInstruction(OpCodes.Ldloc_S, localTemperature),
                     new CodeInstruction(OpCodes.Callvirt, funcAnimationCurveEvaluate),
-                    new CodeInstruction(OpCodes.Ldc_R4, (float)1000),
+                    new CodeInstruction(OpCodes.Ldc_R4, (float)1000) {labels = new List<Label>() { valueEnd } },
                 });
-                codes[CodeLoc1].labels = tempJump;  // Restaure the missing jump target to prevent an unnamed exception
-                codes[CodeLoc1 + 5].labels.Add(valueCtrl);
-                codes[CodeLoc1 + 9].labels.Add(valueEnd);
             }
             else Console.WriteLine("DW_Tweaks ERR: Failed to apply energy uGUI_ExosuitHUD_Update_patch.");
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-            //    Console.WriteLine("DW_Tweaks Debug: {0:0000} {1}: ({2}){3}", i, codes[i].opcode, codes[i].opcode.OperandType, codes[i].operand);
-            //}
             return codes.AsEnumerable();
         }
     }
 
+    // Seamoth
     [HarmonyPatch(typeof(uGUI_SeamothHUD))]
     [HarmonyPatch("Update")]
     class uGUI_SeamothHUD_Update_patch
@@ -302,7 +292,6 @@ namespace DW_Tweaks.Patches
         public static readonly object funcGetTemperature = AccessTools.Method(typeof(Vehicle), "GetTemperature");
         public static readonly object fieldTemperatureSmoothValue = AccessTools.Field(typeof(uGUI_SeamothHUD), "temperatureSmoothValue");
         public static readonly object fieldLastTemperature = AccessTools.Field(typeof(uGUI_SeamothHUD), "lastTemperature");
-        public static readonly object funcKeyCode = AccessTools.Method(typeof(Input), "GetKey", new Type[] { typeof(KeyCode) });
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -421,10 +410,43 @@ namespace DW_Tweaks.Patches
                 codes[CodeLoc1 + 1].operand = (float)1000;
             }
             else Console.WriteLine("DW_Tweaks ERR: Failed to apply energy uGUI_SeamothHUD_Update_patch.");
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-            //    Console.WriteLine("DW_Tweaks Debug: {0:0000} {1}: ({2}){3}", i, codes[i].opcode, codes[i].opcode.OperandType, codes[i].operand);
-            //}
+            return codes.AsEnumerable();
+        }
+    }
+
+    // Enable displaying current and total energy on the Cyclops as if it was a base
+    [HarmonyPatch(typeof(uGUI_PowerIndicator))]
+    [HarmonyPatch("IsPowerEnabled")]
+    class uGUI_PowerIndicator_IsPowerEnabled_patch
+    {
+        public static readonly object fieldIsBase = AccessTools.Field(typeof(SubRoot), "isBase");
+        public static readonly object fieldPlayerMain = AccessTools.Field(typeof(Player), "main");
+        public static readonly object fieldPlayerMode = AccessTools.Field(typeof(Player), "mode");
+
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.VehicleHUDExtraPrecision;
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
+        {
+            bool inject = false;
+
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count - 2; i++)
+            {
+                if (!inject &&
+                    codes[i].opcode.Equals(OpCodes.Ldloc_S) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldIsBase) &&
+                    codes[i + 2].opcode.Equals(OpCodes.Brfalse))
+                {
+                    inject = true;
+                    codes.RemoveRange(i, 3);
+                    break;
+                }
+            }
+            if (!inject) Console.WriteLine("DW_Tweaks ERR: Failed to apply energy uGUI_PowerIndicator_IsPowerEnabled_patch.");
             return codes.AsEnumerable();
         }
     }

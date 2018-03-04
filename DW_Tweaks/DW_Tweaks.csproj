@@ -33,13 +33,16 @@
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\..\Harmony-master\Harmony\bin\Debug\0Harmony.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\Subnautica\Subnautica_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\Subnautica\Subnautica_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -49,6 +52,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\Subnautica\Subnautica_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -56,12 +60,14 @@
     <Compile Include="DW_Settings.cs" />
     <Compile Include="Patches\Container_Overstuff.cs" />
     <Compile Include="Patches\CyclopsHandling.cs" />
-    <Compile Include="Patches\Container_ItemCount.cs" />
+    <Compile Include="Patches\Container_ItemCountTooltip.cs" />
+    <Compile Include="Patches\Databox_AlwaysSpawn.cs" />
     <Compile Include="Patches\DevConsole.cs" />
     <Compile Include="Patches\Drillable_MaxItems.cs" />
     <Compile Include="Patches\Exosuit_Storage.cs" />
     <Compile Include="Patches\FireExtinguisher_Regen.cs" />
     <Compile Include="Patches\Food_OvereatMechanic.cs" />
+    <Compile Include="Patches\ScaleWithDayNightSpeed.cs" />
     <Compile Include="Patches\FragmentTrackAll.cs" />
     <Compile Include="Patches\Hardcore_EnableSave.cs" />
     <Compile Include="Patches\Inventory_Size.cs" />
