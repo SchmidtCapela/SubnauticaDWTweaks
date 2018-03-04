@@ -2,7 +2,7 @@
 ### Based on [SNHardcorePlus](https://github.com/Qwiso/SNHardcorePlus), by Qwiso
 
 ### Installation
-After installing QMods, extract the contents of [DW_Tweaks.zip](https://github.com/SchmidtCapela/SubnauticaDWTweaks/releases/download/1.2.0/DW_Tweaks.zip) file to your `\QMods` folder
+After installing QMods, extract the contents of [DW_Tweaks.zip](https://github.com/SchmidtCapela/SubnauticaDWTweaks/releases/download/1.2.0/DW_Tweaks.zip) file to your `\QMods` folder.
 
 ### config.json
 Should be located in `QMods\DW_Tweaks` folder. Every tweak in this mod can be customized, or at least toggled on or off, using this file.
