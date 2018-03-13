@@ -85,6 +85,16 @@ namespace DW_Tweaks
                 Console.WriteLine("DW_Tweaks ERR: Parameter ContainerOverstuff out of bounds. Should be 1 or more.");
                 DW_Tweaks_Settings.Instance.ContainerOverstuff = 1;
             }
+            if ((DW_Tweaks_Settings.Instance.RenewablePowerPushExcess > 1f) || (DW_Tweaks_Settings.Instance.RenewablePowerPushExcess < 0f))
+            {
+                Console.WriteLine("DW_Tweaks ERR: Parameter RenewablePowerPushExcess out of bounds. Should be between 0 and 1.");
+                DW_Tweaks_Settings.Instance.RenewablePowerPushExcess = 0f;
+            }
+            if ((DW_Tweaks_Settings.Instance.NonrenewablePowerPushExcess > 1f) || (DW_Tweaks_Settings.Instance.NonrenewablePowerPushExcess < 0f))
+            {
+                Console.WriteLine("DW_Tweaks ERR: Parameter NonrenewablePowerPushExcess out of bounds. Should be between 0 and 1.");
+                DW_Tweaks_Settings.Instance.NonrenewablePowerPushExcess = 0f;
+            }
         }
 
         private static void writeDefaultSettingsFile(string path)

@@ -17,7 +17,7 @@ namespace DW_Tweaks.Patches
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
         {
-            return DW_Tweaks_Settings.Instance.RenewablePowerPushExcess;
+            return (DW_Tweaks_Settings.Instance.RenewablePowerPushExcess != 0);
         }
 
         public static bool Prefix(SolarPanel __instance)
@@ -26,11 +26,17 @@ namespace DW_Tweaks.Patches
             if (component.constructed)
             {
                 float producedPower = (float)funcGetRechargeScalar.Invoke(__instance, new object[] { }) * DayNightCycle.main.deltaTime * 0.25f * 5f;
-                float excessPower = Mathf.Max(0f, producedPower - (__instance.powerSource.maxPower - __instance.powerSource.power));
+                float excessPower = Mathf.Max(0f, producedPower - (__instance.powerSource.maxPower - __instance.powerSource.power)) * DW_Tweaks_Settings.Instance.RenewablePowerPushExcess;
                 __instance.powerSource.power = Mathf.Clamp(__instance.powerSource.power + producedPower, 0f, __instance.powerSource.maxPower);
-                if (excessPower > 0 && __instance.powerSource.connectedRelay != null)
+                if (excessPower > 0)
                 {
-                    __instance.powerSource.connectedRelay.AddEnergy(excessPower, out float transferredPower);
+                    float transferredPower = 0;
+                    if (__instance.powerSource.connectedRelay != null)
+                    {
+                        if (!__instance.powerSource.connectedRelay.AddEnergy(excessPower, out transferredPower))
+                            __instance.GetComponent<PowerRelay>().GetEndpoint().AddEnergy(excessPower - transferredPower, out transferredPower);
+                    }
+                    else __instance.GetComponent<PowerRelay>().GetEndpoint().AddEnergy(excessPower, out transferredPower);
                 }
             }
             return false;
@@ -44,7 +50,7 @@ namespace DW_Tweaks.Patches
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
         {
-            return DW_Tweaks_Settings.Instance.RenewablePowerPushExcess;
+            return (DW_Tweaks_Settings.Instance.RenewablePowerPushExcess != 0);
         }
 
         public static bool Prefix(ThermalPlant __instance)
@@ -54,9 +60,17 @@ namespace DW_Tweaks.Patches
                 float dayNightSpeed = 2f * DayNightCycle.main.dayNightSpeed;
                 float producedPower = 1.6500001f * dayNightSpeed * Mathf.Clamp01(Mathf.InverseLerp(25f, 100f, __instance.temperature));
                 float storedPower = 0f;
-                if (!__instance.powerSource.AddEnergy(producedPower, out storedPower) && __instance.powerSource.connectedRelay != null)
+                if (!__instance.powerSource.AddEnergy(producedPower, out storedPower))
                 {
-                    __instance.powerSource.connectedRelay.AddEnergy((producedPower - storedPower), out float transferredPower);
+                    float excessPower = (producedPower - storedPower) * DW_Tweaks_Settings.Instance.RenewablePowerPushExcess;
+                    float transferredPower = 0;
+                    if (__instance.powerSource.connectedRelay != null)
+                    {
+                        if (!__instance.powerSource.connectedRelay.AddEnergy(excessPower, out transferredPower))
+                            __instance.GetComponent<PowerRelay>().GetEndpoint().AddEnergy(excessPower - transferredPower, out transferredPower);
+                    }
+                    else __instance.GetComponent<PowerRelay>().GetEndpoint().AddEnergy(excessPower, out transferredPower);
+
                 }
             }
             return false;

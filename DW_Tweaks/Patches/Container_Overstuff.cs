@@ -72,7 +72,7 @@ namespace DW_Tweaks.Patches
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count - 1; i++)
             {
-                if (!injected &&  // The whole math expression goes here
+                if (!injected &&
                     codes[i].opcode.Equals(OpCodes.Call) && codes[i].operand.Equals(funcTrySort) &&
                     codes[i+1].opcode.Equals(OpCodes.Brtrue))
                 {

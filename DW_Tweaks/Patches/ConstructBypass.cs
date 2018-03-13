@@ -150,7 +150,8 @@ namespace DW_Tweaks.Patches
     }
 
     // Tweak to the thermal generator to make it react to temperature decreases, needed to make it less cheaty.
-    [HarmonyPatch(typeof(ThermalPlant))]
+    // Disabling it to test; it seems like storing the temperature is needed because the temperature simulation only works when the cell is loaded.
+    /**[HarmonyPatch(typeof(ThermalPlant))]
     [HarmonyPatch("QueryTemperature")]
     class ThermalPlant_QueryTemperature_Patch
     {
@@ -169,6 +170,54 @@ namespace DW_Tweaks.Patches
                 __instance.UpdateUI();
             }
             return false;
+        }
+    }**/
+
+    // Make relay systems also check distance, needed for them to update on the Cyclops.
+    [HarmonyPatch(typeof(PowerRelay))]
+    [HarmonyPatch("MonitorCurrentConnection")]
+    class PowerRelay_MonitorCurrentConnection_Patch
+    {
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.BypassBuildRestrictions;
+        }
+
+        public static bool testDistance(PowerRelay relay)
+        {
+            Vector3 connectPoint = relay.GetConnectPoint();
+            if ((relay.outboundRelay.GetConnectPoint(connectPoint) - connectPoint).sqrMagnitude < (relay.maxOutboundDistance * relay.maxOutboundDistance))
+                return true;
+            else return false;
+        }
+
+        public static readonly MethodInfo funcValidRelay = AccessTools.Method(typeof(PowerRelay), "IsValidRelayForConnection");
+        public static readonly MethodInfo funcTestDistance = AccessTools.Method(typeof(PowerRelay_MonitorCurrentConnection_Patch), "testDistance");
+
+        public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
+        {
+            bool injected = false;
+            var labelDisconnect = generator.DefineLabel();
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count - 1; i++)
+            {
+                if (!injected &&  // The test to see if the outbound connection is still valid
+                    codes[i].opcode.Equals(OpCodes.Call) && codes[i].operand.Equals(funcValidRelay) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Brtrue))
+                {
+                    injected = true;
+                    codes[i + 2].labels.Add(labelDisconnect);  // Here the disconnection case is handled
+                    codes.InsertRange(i + 1, new List<CodeInstruction>() {  // Also test the distance
+                        new CodeInstruction(OpCodes.Brfalse, labelDisconnect),
+                        new CodeInstruction(OpCodes.Ldarg_0),
+                        new CodeInstruction(OpCodes.Call, funcTestDistance),
+                    });
+                    break;
+                }
+            }
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply PowerRelay_MonitorCurrentConnection_Patch.");
+            return codes.AsEnumerable();
         }
     }
 }
