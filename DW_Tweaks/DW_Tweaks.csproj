@@ -78,6 +78,7 @@
     <Compile Include="Patches\Seamoth_DepthMod3.cs" />
     <Compile Include="Patches\SeaTreaderRandomChunks.cs" />
     <Compile Include="Patches\Steam_UnlockItems.cs" />
+    <Compile Include="Patches\SwimmingSpeedMods.cs" />
     <Compile Include="Patches\Vector3_StringPrecision.cs" />
     <Compile Include="Patches\VehicleHUD.cs" />
     <Compile Include="Patches\ConstructBypass.cs" />

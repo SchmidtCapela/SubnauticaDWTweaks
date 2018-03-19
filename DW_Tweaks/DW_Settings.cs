@@ -32,6 +32,18 @@ namespace DW_Tweaks
         public float RenewablePowerPushExcess = 0f;              // Push this percentage of excess power from renewables into the base's infrastructure
         public float NonrenewablePowerPushExcess = 0f;           // Push this percentage of excess power from non-renewables into the base's infrastructure
 
+        // Adjustments for the speed penalties for specific equipment
+        public float speedTank = 0.425f;                         // Tank
+        public float speedDoubleTank = 0.5f;                     // High Capacity Tank
+        public float speedPlasteelTank = 0.10625f;               // Lightweight Tank
+        public float speedHighCapacityTank = 0.6375f;            // Ultra High Capacity Tank
+        public float speedHighCapacityTankInv = 1.275f;          // Ultra High Capacity Tank in inventory
+        public float speedReinforcedDiveSuit = 1f;               // Reinforced Dive Suit, body only
+        public float speedFins = 1.5f;                           // Fins
+        public float speedUltraGlideFins = 2.5f;                 // Ultraglide Fins
+        public float speedSwimChargeFins = 0f;                   // Swim Charge Fins
+        public float speedHeldTool = 1f;                         // Speed bonus when not holding a tool
+
         public bool VehicleHUDExtraPrecision = false;            // Adds a decimal to Energy and Temperature views, and holding LeftControl and LeftShift provide alternative readouts
         public bool BypassBuildRestrictions = false;             // Holding LeftControl while building ignores certain restrictions
         public bool ConsoleDoesntDisableAchievements = false;    // Using the console doesn't disable achievements for the session. Active cheats still disable them.

@@ -40,4 +40,37 @@ namespace DW_Tweaks.Patches
             return codes.AsEnumerable();
         }
     }
+
+    [HarmonyPatch(typeof(CSVEntitySpawner))]
+    [HarmonyPatch("GetPrefabForSlot")]
+    class CSVEntitySpawner_GetPrefabForSlot_patch
+    {
+        public static readonly object methodKnownTechContains = AccessTools.Method(typeof(KnownTech), "Contains");
+
+        // Test to see if using default values, skip patching if true
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.DataboxAlwaysSpawn;
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
+        {
+            bool injected = false;
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count - 1; i++)
+            {
+                if (!injected &&
+                    codes[i].opcode.Equals(OpCodes.Ldarg_2) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Brfalse))
+                {
+                    injected = true;
+                    codes.RemoveAt(i);
+                    codes[i].opcode = OpCodes.Br;
+                    break;
+                }
+            }
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply CSVEntitySpawner_GetPrefabForSlot_patch.");
+            return codes.AsEnumerable();
+        }
+    }
 }

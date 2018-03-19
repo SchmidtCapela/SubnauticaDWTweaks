@@ -13,7 +13,12 @@ namespace DW_Tweaks.Patches
     class BaseAddCellGhost_UpdatePlacement_patch
     {
         public static readonly object cellTypeField = AccessTools.Field(typeof(BaseAddCellGhost), "cellType");
+        public static readonly object cellMinHeight = AccessTools.Field(typeof(BaseAddCellGhost), "minHeightFromTerrain");
+        public static readonly object cellMaxHeight = AccessTools.Field(typeof(BaseAddCellGhost), "maxHeightFromTerrain");
         public static readonly object funcKeyCode = AccessTools.Method(typeof(Input), "GetKey", new Type[] { typeof(KeyCode) });
+
+        public static readonly float minHeight = 0f;
+        public static readonly float maxHeight = 500f;
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -23,22 +28,47 @@ namespace DW_Tweaks.Patches
 
         public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
         {
-            bool injected = false;
+            bool injected1 = false;
+            bool injected2 = false;
+            var labelLoadMinMax = generator.DefineLabel();
+            var labelAfterMinMax = generator.DefineLabel();
             var codes = new List<CodeInstruction>(instructions);
-            for (int i = 3; i < codes.Count - 2; i++)
+            for (int i = 3; i < codes.Count - 3; i++)
             {
-                if (!injected && codes[i].opcode.Equals(OpCodes.Ldfld) && codes[i].operand.Equals(cellTypeField) &&
+                if (!injected1 && codes[i].opcode.Equals(OpCodes.Ldfld) && codes[i].operand.Equals(cellTypeField) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldc_I4_2) && codes[i + 2].opcode.Equals(OpCodes.Bne_Un) &&  // The test to see if the part is a foundation
                     codes[i - 3].opcode.Equals(OpCodes.Ldloc_0) && codes[i - 2].opcode.Equals(OpCodes.Brfalse))
                 {
-                    injected = true;
-                    codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl));
-                    codes.Insert(i + 4, new CodeInstruction(OpCodes.Call, funcKeyCode));
-                    codes.Insert(i + 5, new CodeInstruction(OpCodes.Brtrue, codes[i - 2].operand));
-                    break;
+                    injected1 = true;
+                    codes.InsertRange(i + 3, new List<CodeInstruction>() {
+                        new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl),
+                        new CodeInstruction(OpCodes.Call, funcKeyCode),
+                        new CodeInstruction(OpCodes.Brtrue, codes[i - 2].operand),
+                    });
+                    if (injected2) break;
                 }
+                if (!injected2 &&
+                    codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(cellMinHeight) &&
+                    codes[i + 2].opcode.Equals(OpCodes.Ldarg_0) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Ldfld) && codes[i + 3].operand.Equals(cellMaxHeight))
+                {
+                    injected2 = true;
+                    codes[i].labels.Add(labelLoadMinMax);
+                    codes[i + 4].labels.Add(labelAfterMinMax);
+                    codes.InsertRange(i, new List<CodeInstruction>() {
+                        new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl),
+                        new CodeInstruction(OpCodes.Call, funcKeyCode),
+                        new CodeInstruction(OpCodes.Brfalse, labelLoadMinMax),
+                        new CodeInstruction(OpCodes.Ldc_R4, minHeight),
+                        new CodeInstruction(OpCodes.Ldc_R4, maxHeight),
+                        new CodeInstruction(OpCodes.Br, labelAfterMinMax),
+                    });
+                    if (injected1) break;
+                }
+
             }
-            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply BaseAddCellGhost_UpdatePlacement_patch.");
+            if (!(injected1 && injected2)) Console.WriteLine("DW_Tweaks ERR: Failed to apply BaseAddCellGhost_UpdatePlacement_patch.");
             return codes.AsEnumerable();
         }
     }
