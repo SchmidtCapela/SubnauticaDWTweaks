@@ -30,7 +30,7 @@ namespace DW_Tweaks.Patches
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldarg_1) &&
                     codes[i + 3].opcode.Equals(OpCodes.Callvirt) && codes[i + 3].operand.Equals(methodOnHandHover) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Br)
+                    codes[i + 4].opcode.Equals(OpCodes.Ret)
                     )
                 {
                     injected = true;
@@ -61,7 +61,7 @@ namespace DW_Tweaks.Patches
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldarg_1) &&
                     codes[i + 3].opcode.Equals(OpCodes.Callvirt) && codes[i + 3].operand.Equals(methodOnHandClick) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Br)
+                    codes[i + 4].opcode.Equals(OpCodes.Ret)
                     )
                 {
                     injected = true;

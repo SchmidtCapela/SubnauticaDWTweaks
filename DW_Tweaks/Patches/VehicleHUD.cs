@@ -17,6 +17,9 @@ namespace DW_Tweaks.Patches
         public static readonly object fieldSubRoot = AccessTools.Field(typeof(CyclopsHelmHUDManager), "subRoot");
         public static readonly object funcGetTemperature = AccessTools.Method(typeof(SubRoot), "GetTemperature");
         public static readonly object fieldThermalReactorCharge = AccessTools.Field(typeof(SubRoot), "thermalReactorCharge");
+        public static readonly object fieldPowerRelay = AccessTools.Field(typeof(SubRoot), "powerRelay");
+        public static readonly object funcRelayPower = AccessTools.Method(typeof(PowerRelay), "GetPower");
+        public static readonly object funcRelayMaxPower = AccessTools.Method(typeof(PowerRelay), "GetMaxPower");
         public static readonly object funcAnimationCurveEvaluate = AccessTools.Method(typeof(AnimationCurve), "Evaluate");
         public static readonly object funcKeyCode = AccessTools.Method(typeof(Input), "GetKey", new Type[] { typeof(KeyCode) });
 
@@ -30,7 +33,6 @@ namespace DW_Tweaks.Patches
         {
             int CodeLoc1 = -1;
             int CodeLoc2 = -1;
-            var localCurrEnergy = original.GetMethodBody().LocalVariables[4];
             var valueCtrl = generator.DefineLabel();
             var valueCtrlShift = generator.DefineLabel();
             var valueEnd = generator.DefineLabel();
@@ -41,20 +43,30 @@ namespace DW_Tweaks.Patches
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count - 4; i++)
             {
+                // Console.WriteLine("DW_Tweaks Debug: {0:0000} {1}: ({2}){3}", i, codes[i].opcode, codes[i].opcode.OperandType, codes[i].operand);
                 if ((CodeLoc1 < 0) &&
-                    codes[i].opcode.Equals(OpCodes.Ldloc_3) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldc_R4) && codes[i + 1].operand.Equals((float)100) &&
-                    codes[i + 2].opcode.Equals(OpCodes.Mul) &&
-                    codes[i + 3].opcode.Equals(OpCodes.Call) && codes[i + 3].operand.Equals(funcCeilToInt) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Stloc_S))
+                    codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldSubRoot) &&
+                    codes[i + 2].opcode.Equals(OpCodes.Ldfld) && codes[i + 2].operand.Equals(fieldPowerRelay) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Callvirt) && codes[i + 3].operand.Equals(funcRelayPower) &&
+                    codes[i + 4].opcode.Equals(OpCodes.Ldarg_0) &&
+                    codes[i + 5].opcode.Equals(OpCodes.Ldfld) && codes[i + 5].operand.Equals(fieldSubRoot) &&
+                    codes[i + 6].opcode.Equals(OpCodes.Ldfld) && codes[i + 6].operand.Equals(fieldPowerRelay) &&
+                    codes[i + 7].opcode.Equals(OpCodes.Callvirt) && codes[i + 7].operand.Equals(funcRelayMaxPower) &&
+                    codes[i + 8].opcode.Equals(OpCodes.Div) &&
+                    codes[i + 9].opcode.Equals(OpCodes.Ldc_R4) && codes[i + 9].operand.Equals((float)100) &&
+                    codes[i + 10].opcode.Equals(OpCodes.Mul) &&
+                    codes[i + 11].opcode.Equals(OpCodes.Call) && codes[i + 11].operand.Equals(funcCeilToInt) &&
+                    codes[i + 12].opcode.Equals(OpCodes.Stloc_2))
                 {
+                    // Console.WriteLine("DW_Tweaks Info: Found Cyclops HUD energy variable.");
                     CodeLoc1 = i;
-                    localCurrEnergy = (LocalVariableInfo)codes[i + 4].operand;
                 }
                 if ((CodeLoc1 > 0) && (CodeLoc2 < 0) &&
                     codes[i].opcode.Equals(OpCodes.Ldstr) && codes[i].operand.Equals("{0}%") &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldloc_S) && codes[i + 1].operand.Equals(localCurrEnergy))
+                    codes[i + 1].opcode.Equals(OpCodes.Ldloc_2))
                 {
+                    // Console.WriteLine("DW_Tweaks Info: Found Cyclops HUD energy string.");
                     CodeLoc2 = i;
                     break;
                 }
@@ -80,7 +92,7 @@ namespace DW_Tweaks.Patches
                 });
 
                 // Now to change the displayed value
-                codes.RemoveRange(CodeLoc1, 3);
+                codes.RemoveRange(CodeLoc1, 11);
                 // Label for the first instruction that calls the CeilToInt function
                 codes[CodeLoc1].labels.Add(valueEnd);
                 codes.InsertRange(CodeLoc1, new List<CodeInstruction>() {
@@ -88,7 +100,15 @@ namespace DW_Tweaks.Patches
                     new CodeInstruction(OpCodes.Call, funcKeyCode),
                     new CodeInstruction(OpCodes.Brtrue, valueCtrl),
                     // Default: power value, though multiplied by 1000
-                    new CodeInstruction(OpCodes.Ldloc_3),
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, fieldSubRoot),
+                    new CodeInstruction(OpCodes.Ldfld, fieldPowerRelay),
+                    new CodeInstruction(OpCodes.Callvirt, funcRelayPower),
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, fieldSubRoot),
+                    new CodeInstruction(OpCodes.Ldfld, fieldPowerRelay),
+                    new CodeInstruction(OpCodes.Callvirt, funcRelayMaxPower),
+                    new CodeInstruction(OpCodes.Div),
                     new CodeInstruction(OpCodes.Ldc_R4, 1000f),
                     new CodeInstruction(OpCodes.Mul),
                     new CodeInstruction(OpCodes.Br, valueEnd),
@@ -199,8 +219,8 @@ namespace DW_Tweaks.Patches
                     codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldTemperatureSmoothValue) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldc_R4) && codes[i + 2].operand.Equals((float)-10000) &&
-                    codes[i + 3].opcode.Equals(OpCodes.Bge_Un) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Ldloc_S) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Blt) &&
+                    codes[i + 12].opcode.Equals(OpCodes.Ldloc_S) &&
                     codes[i + 13].opcode.Equals(OpCodes.Stfld) && codes[i + 13].operand.Equals(fieldTemperatureSmoothValue) &&
                     codes[i + 14].opcode.Equals(OpCodes.Ldarg_0) &&
                     codes[i + 15].opcode.Equals(OpCodes.Ldfld) && codes[i + 15].operand.Equals(fieldTemperatureSmoothValue) &&
@@ -235,8 +255,7 @@ namespace DW_Tweaks.Patches
                     new CodeInstruction(OpCodes.Ldc_R4, (float)10),
                     new CodeInstruction(OpCodes.Mul),
                 });
-                codes.RemoveRange(CodeLoc3 + 5, 8);
-                codes.RemoveRange(CodeLoc3, 4);
+                codes.RemoveRange(CodeLoc3, 12);
             }
             else {
                 if ((CodeLoc3 >= 0) && (CodeLoc4 >= 0)) Console.WriteLine("DW_Tweaks ERR: Failed to apply temperature uGUI_ExosuitHUD_Update_patch, the order is wrong.");
@@ -351,14 +370,15 @@ namespace DW_Tweaks.Patches
                     codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldTemperatureSmoothValue) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldc_R4) && codes[i + 2].operand.Equals((float)-10000) &&
-                    codes[i + 3].opcode.Equals(OpCodes.Bge_Un) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Ldloc_S) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Blt) &&
+                    codes[i + 12].opcode.Equals(OpCodes.Ldloc_S) &&
                     codes[i + 13].opcode.Equals(OpCodes.Stfld) && codes[i + 13].operand.Equals(fieldTemperatureSmoothValue) &&
                     codes[i + 14].opcode.Equals(OpCodes.Ldarg_0) &&
                     codes[i + 15].opcode.Equals(OpCodes.Ldfld) && codes[i + 15].operand.Equals(fieldTemperatureSmoothValue) &&
                     codes[i + 16].opcode.Equals(OpCodes.Call) && codes[i + 16].operand.Equals(funcCeilToInt) &&
                     codes[i + 17].opcode.Equals(OpCodes.Stloc_S))
                 {
+                    // Console.WriteLine("DW_Tweaks Info: Found temperature calc.");
                     CodeLoc3 = i;
                 }
                 // Third patch point: temperature string
@@ -367,6 +387,7 @@ namespace DW_Tweaks.Patches
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldLastTemperature) &&
                     codes[i + 2].opcode.Equals(OpCodes.Call) && codes[i + 2].operand.Equals(funcGetStringforInt))
                 {
+                    // Console.WriteLine("DW_Tweaks Info: Found temperature string.");
                     CodeLoc4 = i;
                 }
             }
@@ -387,8 +408,7 @@ namespace DW_Tweaks.Patches
                     new CodeInstruction(OpCodes.Ldc_R4, (float)10),
                     new CodeInstruction(OpCodes.Mul),
                 });
-                codes.RemoveRange(CodeLoc3 + 5, 8);
-                codes.RemoveRange(CodeLoc3, 4);
+                codes.RemoveRange(CodeLoc3, 12);  // Remove the reference to SmoothDamp to remove lag in temperature reporting
             }
             else
             {
@@ -437,7 +457,7 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 2; i++)
             {
                 if (!inject &&
-                    codes[i].opcode.Equals(OpCodes.Ldloc_S) &&
+                    (codes[i].opcode.Equals(OpCodes.Ldloc_0) || codes[i].opcode.Equals(OpCodes.Ldloc_1) || codes[i].opcode.Equals(OpCodes.Ldloc_2) || codes[i].opcode.Equals(OpCodes.Ldloc_3) || codes[i].opcode.Equals(OpCodes.Ldloc_S)) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldIsBase) &&
                     codes[i + 2].opcode.Equals(OpCodes.Brfalse))
                 {

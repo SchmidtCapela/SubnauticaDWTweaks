@@ -38,7 +38,7 @@ namespace DW_Tweaks.Patches
             int testPlasteelTank = -1;
             int testHighCapacityTank = -1;
             bool testHighCapacityTankInv = false;
-            int testReinforcedDiveSuit = -1;
+            bool testReinforcedDiveSuit = false;
             int testFins = -1;
             int testUltraGlideFins = -1;
             bool testHeldTool = false;
@@ -62,10 +62,6 @@ namespace DW_Tweaks.Patches
                     codes[i - 1].opcode.Equals(OpCodes.Ldc_I4) && codes[i - 1].operand.Equals((int)TechType.HighCapacityTank) &&
                     codes[i].opcode.Equals(OpCodes.Beq))
                     testHighCapacityTank = i;
-                if (testReinforcedDiveSuit < 0 &&
-                    codes[i - 1].opcode.Equals(OpCodes.Ldc_I4) && codes[i - 1].operand.Equals((int)TechType.ReinforcedDiveSuit) &&
-                    codes[i].opcode.Equals(OpCodes.Beq))
-                    testReinforcedDiveSuit = i;
                 if (testFins < 0 &&
                     codes[i - 1].opcode.Equals(OpCodes.Ldc_I4) && codes[i - 1].operand.Equals((int)TechType.Fins) &&
                     codes[i].opcode.Equals(OpCodes.Beq))
@@ -148,15 +144,17 @@ namespace DW_Tweaks.Patches
                     codes[i + 1].operand = DW_Tweaks_Settings.Instance.speedUltraGlideFins;
                 }
                 // The segment that applies the reinforced suit speed penalty is different
-                if (testReinforcedDiveSuit > 0 &&
-                    codes[i - 1].labels.Contains((Label)codes[testReinforcedDiveSuit].operand) &&
-                    codes[i - 1].opcode.Equals(OpCodes.Ldc_R4) &&
-                    codes[i].opcode.Equals(OpCodes.Ldloc_0) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldc_R4) &&
-                    codes[i + 2].opcode.Equals(OpCodes.Sub))
+                if (!testReinforcedDiveSuit &&
+                    codes[i - 1].opcode.Equals(OpCodes.Ldloc_S) &&
+                    codes[i].opcode.Equals(OpCodes.Ldc_I4) && codes[i].operand.Equals((int)TechType.ReinforcedDiveSuit) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Bne_Un) &&
+                    codes[i + 2].opcode.Equals(OpCodes.Ldc_R4) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Ldloc_0) &&
+                    codes[i + 4].opcode.Equals(OpCodes.Ldc_R4) &&  // Penalty
+                    codes[i + 5].opcode.Equals(OpCodes.Sub))
                 {
-                    testReinforcedDiveSuit = 0;
-                    codes[i + 1].operand = DW_Tweaks_Settings.Instance.speedReinforcedDiveSuit;
+                    testReinforcedDiveSuit = true;
+                    codes[i + 4].operand = DW_Tweaks_Settings.Instance.speedReinforcedDiveSuit;
                 }
                 // The tank in inventory and held tool are more conventional
                 if (!testHighCapacityTankInv &&
@@ -177,18 +175,16 @@ namespace DW_Tweaks.Patches
                     codes[i - 1].opcode.Equals(OpCodes.Callvirt) && codes[i - 1].operand.Equals(funcGetHeldTool) &&
                     codes[i].opcode.Equals(OpCodes.Ldnull) && // Test to see if null
                     codes[i + 1].opcode.Equals(OpCodes.Call) &&  // op_Equality
-                    codes[i + 2].opcode.Equals(OpCodes.Stloc_S) &&
-                    codes[i + 3].opcode.Equals(OpCodes.Ldloc_S) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Brfalse) &&
-                    codes[i + 5].opcode.Equals(OpCodes.Ldloc_0) &&
-                    codes[i + 6].opcode.Equals(OpCodes.Ldc_R4) &&  // Speed Penalty
-                    codes[i + 7].opcode.Equals(OpCodes.Add))
+                    codes[i + 2].opcode.Equals(OpCodes.Brfalse) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Ldloc_0) &&
+                    codes[i + 4].opcode.Equals(OpCodes.Ldc_R4) &&  // Speed Penalty
+                    codes[i + 5].opcode.Equals(OpCodes.Add))
                 {
                     testHeldTool = true;
-                    codes[i + 6].operand = DW_Tweaks_Settings.Instance.speedHeldTool;
+                    codes[i + 4].operand = DW_Tweaks_Settings.Instance.speedHeldTool;
                 }
                 if (testHighCapacityTankInv && testHeldTool &&
-                    testTank == 0 && testDoubleTank == 0 && testPlasteelTank == 0 && testHighCapacityTank == 0 && testReinforcedDiveSuit == 0 && testFins == 0 && testUltraGlideFins == 0)
+                    testTank == 0 && testDoubleTank == 0 && testPlasteelTank == 0 && testHighCapacityTank == 0 && testReinforcedDiveSuit && testFins == 0 && testUltraGlideFins == 0)
                     break;
             }
             if (!testHighCapacityTankInv)    Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for ultra high capacity tank in inventory in UnderwaterMotor_AlterMaxSpeed_patch.");
@@ -197,7 +193,7 @@ namespace DW_Tweaks.Patches
             if (testDoubleTank != 0)         Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for high capacity tank in UnderwaterMotor_AlterMaxSpeed_patch.");
             if (testPlasteelTank != 0)       Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for lightweight tank in UnderwaterMotor_AlterMaxSpeed_patch.");
             if (testHighCapacityTank != 0)   Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for ultra high capacity tank in UnderwaterMotor_AlterMaxSpeed_patch.");
-            if (testReinforcedDiveSuit != 0) Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for reinforced dive suit in UnderwaterMotor_AlterMaxSpeed_patch.");
+            if (!testReinforcedDiveSuit) Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for reinforced dive suit in UnderwaterMotor_AlterMaxSpeed_patch.");
             if (testFins != 0)               Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for fins in UnderwaterMotor_AlterMaxSpeed_patch.");
             if (testUltraGlideFins != 0)     Console.WriteLine("DW_Tweaks ERR: Failed to apply patch for ultraglide fins in UnderwaterMotor_AlterMaxSpeed_patch.");
             return codes.AsEnumerable();

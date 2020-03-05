@@ -7,8 +7,7 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(BaseBioReactor))]
-    [HarmonyPatch("container", PropertyMethod.Getter)]
+    [HarmonyPatch(typeof(BaseBioReactor), "container", MethodType.Getter)]
     class BaseBioReactor_container_getter_patch
     {
         public static readonly OpCode[] valueMap = {

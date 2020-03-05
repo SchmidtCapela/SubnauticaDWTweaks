@@ -27,12 +27,13 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 2; i++)
             {
                 if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldloc_1) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Call) && codes[i + 1].operand.Equals(methodKnownTechContains) &&
-                    codes[i + 2].opcode.Equals(OpCodes.Brtrue))
+                    codes[i].opcode.Equals(OpCodes.Ldloc_0) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Ldfld) &&
+                    codes[i + 2].opcode.Equals(OpCodes.Call) && codes[i + 2].operand.Equals(methodKnownTechContains) &&
+                    codes[i + 3].opcode.Equals(OpCodes.Brtrue))
                 {
                     injected = true;
-                    codes.RemoveRange(i, 3);
+                    codes.RemoveRange(i, 4);
                     break;
                 }
             }

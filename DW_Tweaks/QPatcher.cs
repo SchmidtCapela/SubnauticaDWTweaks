@@ -3,11 +3,14 @@ using Oculus.Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Reflection;
+using QModManager.API.ModLoading;
 
 namespace DW_Tweaks
 {
-    public class QPatch
+    [QModCore]
+    public static class QPatch
     {
+        [QModPatch]
         public static void Patch()
         {
             manageSettingsFile();
