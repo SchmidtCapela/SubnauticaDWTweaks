@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,11 +7,10 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(DevConsole))]
-    [HarmonyPatch("OnSubmit")]
+    [HarmonyPatch(typeof(DevConsole), nameof(DevConsole.OnSubmit))]
     class DevConsole_OnSubmit_patch
     {
-        public static readonly object fieldHasUsedConsole = AccessTools.Field(typeof(DevConsole), "hasUsedConsole");
+        public static readonly object fieldHasUsedConsole = AccessTools.Field(typeof(DevConsole), nameof(DevConsole.hasUsedConsole));
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -27,11 +26,11 @@ namespace DW_Tweaks.Patches
             {
                 if (!injected &&
                     codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldc_I4_1) &&
-                    codes[i + 2].opcode.Equals(OpCodes.Stfld) && codes[i + 2].operand.Equals(fieldHasUsedConsole))
+                    codes[i + 1].opcode.Equals(OpCodes.Ldc_I4_1) &&  // True
+                    codes[i + 2].opcode.Equals(OpCodes.Stfld) && codes[i + 2].operand.Equals(fieldHasUsedConsole))  // store in this.hasUsedConsole
                 {
                     injected = true;
-                    codes[i + 1].opcode = OpCodes.Ldc_I4_0;
+                    codes[i + 1].opcode = OpCodes.Ldc_I4_0;  // Change to False
                     break;
                 }
             }

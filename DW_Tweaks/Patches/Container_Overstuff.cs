@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -22,10 +22,11 @@ namespace DW_Tweaks.Patches
         public static bool Prefix(ItemsContainer __instance, Pickupable pickupable, ref bool __result)
         {
             Vector2int itemSize = CraftData.GetItemSize(pickupable.GetTechType());
-            if (itemSize.x == 1 && itemSize.y == 1)
+            // if (itemSize.x == 1 && itemSize.y == 1)
             {
                 List<TechType> techTypes = __instance.GetItemTypes();
-                if (techTypes.Count() == 1 && techTypes[0] == pickupable.GetTechType() && __instance.count < (__instance.sizeX * __instance.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff))
+                if (techTypes.Count() == 1 && techTypes[0] == pickupable.GetTechType() &&
+                    (itemSize.x * itemSize.y * __instance.count) <= ((itemSize.x * itemSize.y) + __instance.sizeX * __instance.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff))
                 {
                     __result = true;
                     return false;
@@ -53,7 +54,7 @@ namespace DW_Tweaks.Patches
             if (techTypes.Count() == 1)
             {
                 Vector2int itemSize = CraftData.GetItemSize(techTypes[0]);
-                if (itemSize.x == 1 && itemSize.y == 1 && container.count <= (container.sizeX * container.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff))
+                if (itemSize.x * itemSize.y * container.count <= (container.sizeX * container.sizeY * DW_Tweaks_Settings.Instance.ContainerOverstuff))
                 {
                     return true;
                 }

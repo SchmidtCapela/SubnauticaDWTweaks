@@ -49,7 +49,7 @@ namespace DW_Tweaks
         public bool ConsoleDoesntDisableAchievements = false;    // Using the console doesn't disable achievements for the session. Active cheats still disable them.
         public bool FoodOvereatAlternateRule = false;            // Overeating is changed to avoid waste when eating with food above 99.
         public bool ScaleWithDayNightSpeed = false;              // daynightspeed extended to food, water, scanner.
-        public bool HardcoreEnableSave = false;                  // Enables the save button when playing hardcore
+        public bool HardcoreEnableSave = false;                  // Enables the save button, and disables deleting the save on death, when playing hardcore
         public bool PickupFullContainers = false;                // Enables picking up portable containers when they are full
         public bool UnlockSteamInventoryItems = false;           // Unlocks in-game items that usually require items in the player's Steam inventory
         public bool ContainerQuantityTooltip = false;            // Adds a tooltip saying how many items the container currently has, and the type if it only has one type or item
@@ -58,6 +58,9 @@ namespace DW_Tweaks
         public bool DrillableDropMax = false;                    // Whenever large deposits break, drops the max amount of resources
         public bool SeaTreaderRandomChunks = false;              // Randomize the content of chunks unearthed by the Sea Treaders
         public bool DataboxAlwaysSpawn = false;                  // Spawn databoxes even if the player already knows the tech it gives
+
+        public bool FixDataboxScan = false;                      // Databox Scanner Fix functionality
+        public bool FixLargeDeposit = false;                     // Large Deposits Fix functionality
 
         public int Vector3StringPrecision = 1;                   // How many decimal places to show when printing Vector3 values, as seen in the F1 screen
 

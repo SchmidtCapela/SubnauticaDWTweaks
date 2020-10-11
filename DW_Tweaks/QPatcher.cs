@@ -1,12 +1,54 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Oculus.Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using QModManager.API.ModLoading;
+using System.Reflection.Emit;
 
 namespace DW_Tweaks
 {
+    public static class Utils
+    {
+        public static bool isCode(CodeInstruction code, OpCode opcode)
+        {
+            if (opcode.Equals(OpCodes.Ldarg) || opcode.Equals(OpCodes.Ldarg_S))
+            {
+                return code.opcode.Equals(OpCodes.Ldarg_0) || code.opcode.Equals(OpCodes.Ldarg_1) || code.opcode.Equals(OpCodes.Ldarg_2) || code.opcode.Equals(OpCodes.Ldarg_3)
+                    || code.opcode.Equals(OpCodes.Ldarg) || code.opcode.Equals(OpCodes.Ldarg_S);
+            }
+            if (opcode.Equals(OpCodes.Ldloc) || opcode.Equals(OpCodes.Ldloc_S))
+            {
+                return code.opcode.Equals(OpCodes.Ldloc_0) || code.opcode.Equals(OpCodes.Ldloc_1) || code.opcode.Equals(OpCodes.Ldloc_2) || code.opcode.Equals(OpCodes.Ldloc_3)
+                    || code.opcode.Equals(OpCodes.Ldloc) || code.opcode.Equals(OpCodes.Ldloc_S);
+            }
+            if (opcode.Equals(OpCodes.Stloc) || opcode.Equals(OpCodes.Stloc_S))
+            {
+                return code.opcode.Equals(OpCodes.Stloc_0) || code.opcode.Equals(OpCodes.Stloc_1) || code.opcode.Equals(OpCodes.Stloc_2) || code.opcode.Equals(OpCodes.Stloc_3)
+                    || code.opcode.Equals(OpCodes.Stloc) || code.opcode.Equals(OpCodes.Stloc_S);
+            }
+            return code.opcode.Equals(opcode);
+        }
+        public static bool isCode(CodeInstruction orig, OpCode opcode, object operand)
+        {
+            return orig.opcode.Equals(opcode) && orig.operand.Equals(operand);
+        }
+        public static object getLocalVar(CodeInstruction orig)
+        {
+            if (orig.opcode.Equals(OpCodes.Ldloc) || orig.opcode.Equals(OpCodes.Ldloc_S) || orig.opcode.Equals(OpCodes.Stloc) || orig.opcode.Equals(OpCodes.Stloc_S))
+            { return orig.operand; }
+            if (orig.opcode.Equals(OpCodes.Ldloc_0) || orig.opcode.Equals(OpCodes.Stloc_0))
+            { return 0; }
+            if (orig.opcode.Equals(OpCodes.Ldloc_1) || orig.opcode.Equals(OpCodes.Stloc_1))
+            { return 1; }
+            if (orig.opcode.Equals(OpCodes.Ldloc_2) || orig.opcode.Equals(OpCodes.Stloc_2))
+            { return 2; }
+            if (orig.opcode.Equals(OpCodes.Ldloc_3) || orig.opcode.Equals(OpCodes.Stloc_3))
+            { return 3; }
+            return null;
+        }
+    }
     [QModCore]
     public static class QPatch
     {
@@ -14,9 +56,9 @@ namespace DW_Tweaks
         public static void Patch()
         {
             manageSettingsFile();
-            
-            HarmonyInstance harmony = HarmonyInstance.Create("qwiso.dw_tweaks.mod");
-            HarmonyInstance.DEBUG = DW_Tweaks_Settings.Instance.HarmonyDebugging;
+
+            Harmony.DEBUG = DW_Tweaks_Settings.Instance.HarmonyDebugging;
+            var harmony = new Harmony("qwiso.dw_tweaks.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
 

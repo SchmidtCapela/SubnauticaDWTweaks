@@ -1,4 +1,5 @@
-﻿using Harmony;
+﻿using HarmonyLib;
+using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,8 +8,7 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(Drillable))]
-    [HarmonyPatch("OnDrill")]
+    [HarmonyPatch(typeof(Drillable), nameof(Drillable.OnDrill))]
     class Drillable_OnDrill_patch
     {
         public static readonly object fieldChanceToSpawnResources = AccessTools.Field(typeof(Drillable), "kChanceToSpawnResources");
@@ -40,12 +40,11 @@ namespace DW_Tweaks.Patches
         }
     }
 
-    [HarmonyPatch(typeof(Drillable))]
-    [HarmonyPatch("SpawnLoot")]
+    [HarmonyPatch(typeof(Drillable), nameof(Drillable.SpawnLoot))]
     class Drillable_SpawnLoot_patch
     {
-        public static readonly object fieldMinResourcesToSpawn = AccessTools.Field(typeof(Drillable), "minResourcesToSpawn");
-        public static readonly object fieldMaxResourcesToSpawn = AccessTools.Field(typeof(Drillable), "maxResourcesToSpawn");
+        public static readonly object fieldMinResourcesToSpawn = AccessTools.Field(typeof(Drillable), nameof(Drillable.minResourcesToSpawn));
+        public static readonly object fieldMaxResourcesToSpawn = AccessTools.Field(typeof(Drillable), nameof(Drillable.maxResourcesToSpawn));
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -69,6 +68,20 @@ namespace DW_Tweaks.Patches
             }
             if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply Drillable_SpawnLoot_patch.");
             return codes.AsEnumerable();
+        }
+    }
+    [HarmonyPatch(typeof(Drillable), nameof(Drillable.DestroySelf))]
+    class Drillable_DestroySelf_Patch  // Copied from Large Deposits Fix
+    {
+        public static bool Prepare()
+        {
+            return DW_Tweaks_Settings.Instance.FixLargeDeposit;
+        }
+
+        static bool Prefix(Drillable __instance)
+        {
+            __instance.SendMessage("OnBreakResource", null, SendMessageOptions.DontRequireReceiver);
+            return true;
         }
     }
 }
