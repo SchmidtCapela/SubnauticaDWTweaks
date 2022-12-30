@@ -41,4 +41,18 @@ namespace DW_Tweaks.Patches
             return codes.AsEnumerable();
         }
     }
+
+    // Patch to disable the countdown if the value ever goes negative
+    [HarmonyPatch(typeof(uGUI_SunbeamCountdown), nameof(uGUI_SunbeamCountdown.UpdateInterface))]
+    class uGUI_SunbeamCountdown_UpdateInterface_Patch
+    {
+        public static bool Prefix()
+        {
+            if (StoryGoalCustomEventHandler.main && (StoryGoalCustomEventHandler.main.endTime < DayNightCycle.main.timePassedAsFloat))
+            {
+                StoryGoalCustomEventHandler.main.countdownActive = false;
+            }
+            return true;
+        }
+    }
 }

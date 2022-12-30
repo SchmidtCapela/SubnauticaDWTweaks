@@ -9,8 +9,8 @@ using System.Linq;
 namespace DW_Tweaks.Patches
 {
     [HarmonyPatch(typeof(IngameMenu))]
-    [HarmonyPatch("OnSelect")]
-    class IngameMenu_OnSelect_patch
+    [HarmonyPatch("UpdateButtons")]
+    class IngameMenu_UpdateButtons_patch
     {
         public static readonly object methodLanguageGet = AccessTools.Method(typeof(Language), "Get");
 
@@ -27,35 +27,16 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 6; i++)
             {
                 if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldstr) && codes[i].operand.Equals("SaveAndQuitToMainMenu") &&
-                    codes[i + 1].opcode.Equals(OpCodes.Callvirt) && codes[i + 1].operand.Equals(methodLanguageGet) &&
-                    codes[i + 2].opcode.Equals(OpCodes.Callvirt) &&  // set_text
-                    codes[i + 3].opcode.Equals(OpCodes.Ldarg_0) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Ldfld) &&  // saveButton
-                    codes[i + 5].opcode.Equals(OpCodes.Callvirt) &&  // get_gameObject
-                    codes[i + 6].opcode.Equals(OpCodes.Ldc_I4_0) &&  // False for the SetActive
-                    codes[i + 7].opcode.Equals(OpCodes.Callvirt) &&  // SetActive
-                    codes[i + 8].opcode.Equals(OpCodes.Br) &&  // End of the conditional
-                    codes[i + 9].opcode.Equals(OpCodes.Ldarg_0) &&  // 5 instructions to copy before the branch at i+8
-                    codes[i + 10].opcode.Equals(OpCodes.Ldfld) &&
-                    codes[i + 11].opcode.Equals(OpCodes.Ldarg_0) &&
-                    codes[i + 12].opcode.Equals(OpCodes.Call) &&
-                    codes[i + 13].opcode.Equals(OpCodes.Callvirt))
+                    codes[i].opcode.Equals(OpCodes.Ldc_I4_0) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Callvirt) &&
+                    codes[i + 2].opcode.Equals(OpCodes.Ret))
                 {
                     injected = true;
-                    codes[i + 6].opcode = OpCodes.Ldc_I4_1;  // Make the save button active
-                    // Copy the code that enables and disables the Save button
-                    codes.InsertRange(i + 8, new List<CodeInstruction>() {
-                        new CodeInstruction(OpCodes.Ldarg_0),
-                        new CodeInstruction(OpCodes.Ldfld, codes[i + 10].operand),
-                        new CodeInstruction(OpCodes.Ldarg_0),
-                        new CodeInstruction(OpCodes.Call, codes[i + 12].operand),
-                        new CodeInstruction(OpCodes.Callvirt, codes[i + 13].operand),
-                    });
+                    codes[i].opcode = OpCodes.Ldc_I4_1;  // Make the save button active
                     break;
                 }
             }
-            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply IngameMenu_OnSelect_patch.");
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply IngameMenu_UpdateButtons_patch.");
             return codes.AsEnumerable();
         }
     }

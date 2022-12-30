@@ -8,10 +8,18 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(DataboxSpawner), nameof(DataboxSpawner.Start))]
+    [HarmonyPatch]
     class DataboxSpawner_Start_patch
     {
         public static readonly object methodKnownTechContains = AccessTools.Method(typeof(KnownTech), nameof(KnownTech.Contains));
+
+        // Need a different way to specify the target method due to it being a coroutine
+        static MethodBase TargetMethod()//The target method is found using the custom logic defined here
+        {
+            var predicateClass = typeof(DataboxSpawner).GetNestedTypes(AccessTools.all)
+                .FirstOrDefault(t => t.FullName.Contains("Start"));//<Start>d__2 is the hidden object's name, the number at the end of the name may vary. View the IL code to find out the name
+            return predicateClass.GetMethods(AccessTools.all).FirstOrDefault(m => m.Name.Contains("MoveNext")); //Look for the method MoveNext inside the hidden iterator object
+        }
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -26,7 +34,7 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 2; i++)
             {
                 if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldloc_0) &&
+                    codes[i].opcode.Equals(OpCodes.Ldloc_1) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) &&
                     codes[i + 2].opcode.Equals(OpCodes.Call) && codes[i + 2].operand.Equals(methodKnownTechContains) &&
                     codes[i + 3].opcode.Equals(OpCodes.Brtrue))

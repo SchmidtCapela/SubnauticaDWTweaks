@@ -7,8 +7,8 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(DevConsole), nameof(DevConsole.OnSubmit))]
-    class DevConsole_OnSubmit_patch
+    [HarmonyPatch(typeof(DevConsole), nameof(DevConsole.Submit))]
+    class DevConsole_Submit_patch
     {
         public static readonly object fieldHasUsedConsole = AccessTools.Field(typeof(DevConsole), nameof(DevConsole.hasUsedConsole));
 
@@ -34,7 +34,7 @@ namespace DW_Tweaks.Patches
                     break;
                 }
             }
-            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply DevConsole_OnSubmit_patch.");
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply DevConsole_Submit_patch.");
             return codes.AsEnumerable();
         }
     }

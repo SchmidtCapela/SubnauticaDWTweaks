@@ -82,7 +82,7 @@ namespace DW_Tweaks.Patches
                 {
                     injected = true;
                     List<CodeInstruction> replacement = new List<CodeInstruction>() {
-                        new CodeInstruction(OpCodes.Ldloc_S, codes[i-2].operand),  // Vector a
+                        new CodeInstruction(OpCodes.Ldloc_S, codes[i-2].operand) { labels = codes[i-2].labels },  // Vector a
                         new CodeInstruction(OpCodes.Ldc_R4, 1f),  // Will clamp to 1
                         new CodeInstruction(OpCodes.Call, funcClampMagnitude),  // ClampMagnitude
                         new CodeInstruction(OpCodes.Stloc_S, codes[i-2].operand),  // Vector a

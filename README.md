@@ -1,17 +1,17 @@
-## Requires the use of [QModManager](https://www.nexusmods.com/subnautica/mods/16/) found on Nexus Mods
-### Based on [SNHardcorePlus](https://github.com/Qwiso/SNHardcorePlus), by Qwiso
+### Updated for Subnautica Living Large (2.0), uses BepInEx
+### Originally based on [SNHardcorePlus](https://github.com/Qwiso/SNHardcorePlus), by Qwiso
 
 ### Installation
-After installing QMods, extract the contents of [DW_Tweaks.zip](https://github.com/SchmidtCapela/SubnauticaDWTweaks/releases/download/1.3.0/DW_Tweaks.zip) file to your `\QMods` folder.
+After installing BepInEx, extract the contents of [DW_Tweaks.zip](https://github.com/SchmidtCapela/SubnauticaDWTweaks/releases/download/2.0.0/DW_Tweaks.zip) file to your `\BepInEx` folder.
 
-### config.json
-Should be located in `QMods\DW_Tweaks` folder. Every tweak in this mod can be customized, or at least toggled on or off, using this file.
+### DW_Tweaks.json
+Should be located in the `\BepInEx\config` folder. Every tweak in this mod can be customized, or at least toggled on or off, using this file.
 
 To toggle a tweak off, either set it to the default value (found in the table below) or delete it.
 
-The mod ships with my personal file, which has all tweaks enabled except for the inventory size ones and the Harmony debugging. If you want to change inventory sizes I suggest using the [CustomizedStorage](https://www.nexusmods.com/subnautica/mods/35) mod instead, as it allows customizing all inventories my mod tweaks and more.
+The mod ships with my personal file, which has all tweaks enabled except for the inventory size ones and the Harmony debugging.
 
-If the config.json file doesn't exist, a new one will be created with all tweaks disabled.
+If the DW_Tweaks.json file doesn't exist, a new one will be created with all tweaks disabled.
 
 The description of each tweak, as well as the value that disables it, follows:
 

@@ -48,8 +48,7 @@ namespace DW_Tweaks.Patches
     [HarmonyPatch("UpdateScanning")]
     class MapRoomFunctionality_UpdateScanning_patch
     {
-        public static readonly object fieldPowerRelay = AccessTools.Field(typeof(MapRoomFunctionality), "powerRelay");
-        public static readonly object MethodConsumeEnergy = AccessTools.Method(typeof(PowerSystem), "ConsumeEnergy");
+        public static readonly object MethodConsumePower = AccessTools.Method(typeof(PowerConsumer), "ConsumePower");
         public static readonly object fieldDayNightCycleMain = AccessTools.Field(typeof(DayNightCycle), "main");
         public static readonly object methodGetDayNightSpeed = AccessTools.Method(typeof(DayNightCycle), "get_dayNightSpeed");
 
@@ -66,11 +65,11 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 1; i++)
             {
                 if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldPowerRelay) &&
+                    codes[i    ].opcode.Equals(OpCodes.Ldc_R4) && codes[i    ].operand.Equals(0.15f) &&
+                    codes[i + 1].opcode.Equals(OpCodes.Br) &&
                     codes[i + 2].opcode.Equals(OpCodes.Ldc_R4) && codes[i + 2].operand.Equals(0.5f) &&
                     codes[i + 3].opcode.Equals(OpCodes.Ldloca_S) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Call) && codes[i + 4].operand.Equals(MethodConsumeEnergy))
+                    codes[i + 4].opcode.Equals(OpCodes.Callvirt) && codes[i + 4].operand.Equals(MethodConsumePower))
                 {
                     injected = true;
                     codes.InsertRange(i + 3, new List<CodeInstruction>() {

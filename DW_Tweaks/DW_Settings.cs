@@ -1,4 +1,4 @@
-﻿using Oculus.Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace DW_Tweaks
 {

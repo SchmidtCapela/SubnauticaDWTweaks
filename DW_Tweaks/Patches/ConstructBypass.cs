@@ -11,7 +11,6 @@ namespace DW_Tweaks.Patches
     [HarmonyPatch(typeof(BaseAddCellGhost), nameof(BaseAddCellGhost.UpdatePlacement))]
     class BaseAddCellGhost_UpdatePlacement_patch
     {
-        public static readonly object cellTypeField = AccessTools.Field(typeof(BaseAddCellGhost), nameof(BaseAddCellGhost.cellType));
         public static readonly object cellMinHeight = AccessTools.Field(typeof(BaseAddCellGhost), nameof(BaseAddCellGhost.minHeightFromTerrain));
         public static readonly object cellMaxHeight = AccessTools.Field(typeof(BaseAddCellGhost), nameof(BaseAddCellGhost.maxHeightFromTerrain));
         public static readonly object funcKeyCode = AccessTools.Method(typeof(Input), "GetKey", new Type[] { typeof(KeyCode) });
@@ -35,17 +34,17 @@ namespace DW_Tweaks.Patches
             for (int i = 3; i < codes.Count - 3; i++)
             {
                 if (!injected1 &&
-                    Utils.isCode(codes[i    ], OpCodes.Ldfld, cellTypeField) &&
+                    Utils.isCode(codes[i    ], OpCodes.Ldloc_1) &&
                     Utils.isCode(codes[i + 1], OpCodes.Ldc_I4_2) &&
                     Utils.isCode(codes[i + 2], OpCodes.Bne_Un) &&  // The test to see if the part is a foundation
-                    Utils.isCode(codes[i - 3], OpCodes.Ldloc_0) &&
-                    Utils.isCode(codes[i - 2], OpCodes.Brfalse))
+                    Utils.isCode(codes[i - 2], OpCodes.Ldloc_0) &&
+                    Utils.isCode(codes[i - 1], OpCodes.Brfalse))
                 {
                     injected1 = true;
                     codes.InsertRange(i + 3, new List<CodeInstruction>() {
                         new CodeInstruction(OpCodes.Ldc_I4, (int)KeyCode.LeftControl),
                         new CodeInstruction(OpCodes.Call, funcKeyCode),
-                        new CodeInstruction(OpCodes.Brtrue, codes[i - 2].operand),
+                        new CodeInstruction(OpCodes.Brtrue, codes[i - 1].operand),
                     });
                     if (injected2) break;
                 }

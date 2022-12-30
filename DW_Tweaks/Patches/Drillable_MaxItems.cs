@@ -8,43 +8,19 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(Drillable), nameof(Drillable.OnDrill))]
-    class Drillable_OnDrill_patch
-    {
-        public static readonly object fieldChanceToSpawnResources = AccessTools.Field(typeof(Drillable), "kChanceToSpawnResources");
-
-        // Test to see if using default values, skip patching if true
-        public static bool Prepare()
-        {
-            return DW_Tweaks_Settings.Instance.DrillableAlwaysDrop;
-        }
-
-        public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, ILGenerator generator, IEnumerable<CodeInstruction> instructions)
-        {
-            bool injected = false;
-            var codes = new List<CodeInstruction>(instructions);
-            for (int i = 0; i < codes.Count - 2; i++)
-            {
-                if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
-                    codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldChanceToSpawnResources))
-                {
-                    injected = true;
-                    codes.RemoveRange(i, 2);
-                    codes.Insert(i, new CodeInstruction(OpCodes.Ldc_R4, (float)10));  // needs to be more than 1
-                    break;
-                }
-            }
-            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply Drillable_OnDrill_patch.");
-            return codes.AsEnumerable();
-        }
-    }
-
-    [HarmonyPatch(typeof(Drillable), nameof(Drillable.SpawnLoot))]
-    class Drillable_SpawnLoot_patch
+    [HarmonyPatch]
+    class Drillable_SpawnLootAsync_patch
     {
         public static readonly object fieldMinResourcesToSpawn = AccessTools.Field(typeof(Drillable), nameof(Drillable.minResourcesToSpawn));
         public static readonly object fieldMaxResourcesToSpawn = AccessTools.Field(typeof(Drillable), nameof(Drillable.maxResourcesToSpawn));
+
+        // Need a different way to specify the target method due to it being a coroutine
+        static MethodBase TargetMethod()//The target method is found using the custom logic defined here
+        {
+            var predicateClass = typeof(Drillable).GetNestedTypes(AccessTools.all)
+                .FirstOrDefault(t => t.FullName.Contains("SpawnLootAsync"));//<SpawnLootAsync>d__45 is the hidden object's name, the number at the end of the name may vary. View the IL code to find out the name
+            return predicateClass.GetMethods(AccessTools.all).FirstOrDefault(m => m.Name.Contains("MoveNext")); //Look for the method MoveNext inside the hidden iterator object
+        }
 
         // Test to see if using default values, skip patching if true
         public static bool Prepare()
@@ -59,14 +35,15 @@ namespace DW_Tweaks.Patches
             for (int i = 0; i < codes.Count - 2; i++)
             {
                 if (!injected &&
-                    codes[i].opcode.Equals(OpCodes.Ldarg_0) &&
+                    codes[i].opcode.Equals(OpCodes.Ldloc_1) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldfld) && codes[i + 1].operand.Equals(fieldMinResourcesToSpawn))
                 {
                     injected = true;
                     codes[i + 1].operand = fieldMaxResourcesToSpawn;
+                    break;
                 }
             }
-            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply Drillable_SpawnLoot_patch.");
+            if (!injected) Console.WriteLine("DW_Tweaks ERR: Failed to apply Drillable_SpawnLootAsync_patch.");
             return codes.AsEnumerable();
         }
     }

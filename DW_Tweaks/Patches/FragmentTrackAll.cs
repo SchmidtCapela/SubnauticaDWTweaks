@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace DW_Tweaks.Patches
 {
-    [HarmonyPatch(typeof(ResourceTracker))]
+/*    [HarmonyPatch(typeof(ResourceTracker))]
     [HarmonyPatch("Start")]
     class ResourceTracker_Start_patch
     {
@@ -54,10 +54,10 @@ namespace DW_Tweaks.Patches
             return codes.AsEnumerable();
         }
     }
-
+*/
     // This function only serves to remove fragments from tracking as the player completes recipes.
     [HarmonyPatch(typeof(ResourceTracker))]
-    [HarmonyPatch("UpdateFragments")]
+    [HarmonyPatch("OnBlueprintHandTargetUsed")]
     class ResourceTracker_UpdateFragments_patch
     {
 
@@ -67,8 +67,9 @@ namespace DW_Tweaks.Patches
             return DW_Tweaks_Settings.Instance.FragmentTrackAll;
         }
 
-        public static bool Prefix()
+        public static bool Prefix(ResourceTracker __instance)
         {
+            __instance.Unregister();
             return false;
         }
     }

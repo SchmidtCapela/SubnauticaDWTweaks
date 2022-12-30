@@ -1,10 +1,11 @@
-﻿using HarmonyLib;
-using Oculus.Newtonsoft.Json;
+﻿using BepInEx;
+using HarmonyLib;
+using Newtonsoft.Json;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using QModManager.API.ModLoading;
 using System.Reflection.Emit;
 
 namespace DW_Tweaks
@@ -49,11 +50,12 @@ namespace DW_Tweaks
             return null;
         }
     }
-    [QModCore]
-    public static class QPatch
+    [BepInPlugin("qwiso.dw_tweaks.mod", "DW Tweaks", "2.0.0")]
+    public class MyPlugin : BaseUnityPlugin
     {
-        [QModPatch]
-        public static void Patch()
+        // You may also use Awake(), Update(), LateUpdate() etc..
+        // as BepInEx plugins are MonoBehaviours.
+        private void Start()
         {
             manageSettingsFile();
 
@@ -65,8 +67,7 @@ namespace DW_Tweaks
 
         private static void manageSettingsFile()
         {
-            string modDirectory = Environment.CurrentDirectory + @"\QMods";
-            string settingsPath = modDirectory + @"\DW_Tweaks\config.json";
+            string settingsPath = Path.Combine(Paths.ConfigPath, "DW_Tweaks.json");
 
             if (!File.Exists(settingsPath))
             {

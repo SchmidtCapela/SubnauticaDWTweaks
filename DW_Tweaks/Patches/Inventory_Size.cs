@@ -39,7 +39,7 @@ namespace DW_Tweaks.Patches
                 if (!injected &&
                     codes[i].opcode.Equals(OpCodes.Ldc_I4_6) &&
                     codes[i + 1].opcode.Equals(OpCodes.Ldc_I4_8) &&
-                    codes[i + 3].opcode.Equals(OpCodes.Ldstr) && codes[i + 3].operand.Equals("InventoryStorageLabel"))
+                    codes[i + 3].opcode.Equals(OpCodes.Ldstr) && codes[i + 3].operand.Equals("InventoryLabel"))
                 {
                     injected = true;
                     codes[i].opcode = valueMap[DW_Tweaks_Settings.Instance.InventoryWidth];

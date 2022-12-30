@@ -175,13 +175,13 @@ namespace DW_Tweaks.Patches
                     codes[i - 1].opcode.Equals(OpCodes.Callvirt) && codes[i - 1].operand.Equals(funcGetHeldTool) &&
                     codes[i].opcode.Equals(OpCodes.Ldnull) && // Test to see if null
                     codes[i + 1].opcode.Equals(OpCodes.Call) &&  // op_Equality
-                    codes[i + 2].opcode.Equals(OpCodes.Brfalse) &&
-                    codes[i + 3].opcode.Equals(OpCodes.Ldloc_0) &&
-                    codes[i + 4].opcode.Equals(OpCodes.Ldc_R4) &&  // Speed Penalty
-                    codes[i + 5].opcode.Equals(OpCodes.Add))
+                    codes[i + 4].opcode.Equals(OpCodes.Brfalse) &&
+                    codes[i + 5].opcode.Equals(OpCodes.Ldloc_0) &&
+                    codes[i + 6].opcode.Equals(OpCodes.Ldc_R4) &&  // Speed Penalty
+                    codes[i + 7].opcode.Equals(OpCodes.Sub))
                 {
                     testHeldTool = true;
-                    codes[i + 4].operand = DW_Tweaks_Settings.Instance.speedHeldTool;
+                    codes[i + 6].operand = DW_Tweaks_Settings.Instance.speedHeldTool;
                 }
                 if (testHighCapacityTankInv && testHeldTool &&
                     testTank == 0 && testDoubleTank == 0 && testPlasteelTank == 0 && testHighCapacityTank == 0 && testReinforcedDiveSuit && testFins == 0 && testUltraGlideFins == 0)
